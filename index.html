@@ -13,21 +13,23 @@
         .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; }
         input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: #1a1a1a; color: #fff; font-size: 14px; box-sizing: border-box; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; }
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; gap: 10px; }
-        .btn-clear { color: var(--danger); background: none; border: 1px solid var(--danger); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
-        .btn-del-selected { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; display: none; }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13px; }
+        .top-btns { display: flex; gap: 8px; }
+        .btn-top { background: #222; border: 1px solid #444; color: #fff; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .btn-clear { color: var(--danger); border-color: var(--danger); }
+        .btn-copy-sel { background: var(--primary); color: white; border: none; display: none; }
+        .btn-del-selected { background: var(--danger); color: white; border: none; display: none; }
         
         .acc-item { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; gap: 12px; }
         .content-area { flex-grow: 1; }
         
-        /* Nama Akun & Copy Mail */
         .acc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
         .acc-name { font-size: 15px; font-weight: 600; color: #eee; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .btn-mail { background: #222; border: 1px solid #444; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+        .btn-action-small { background: #222; border: 1px solid #444; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
 
         .secret-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .secret-val { font-family: monospace; background: #222; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #aaa; word-break: break-all; flex-grow: 1; }
-        .btn-small-copy { background: #333; border: 1px solid #444; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
         
         .otp-box { display: flex; align-items: center; justify-content: space-between; background: #0a0a0a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #1a1a1a; }
         .otp-num { font-family: monospace; font-size: 32px; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
@@ -41,20 +43,28 @@
 <body>
 <div class="wrapper">
     <div class="header"><h3>2FA Authenticator</h3></div>
+    
     <div class="top-bar" id="topBar" style="display:none">
-        <button id="btnDelSelected" class="btn-del-selected" onclick="deleteSelected()">Delete Selected (<span id="count">0</span>)</button>
-        <button class="btn-clear" onclick="clearAll()">Clear All</button>
+        <label style="cursor:pointer"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
+        <div class="top-btns">
+            <button id="btnCopySelected" class="btn-top btn-copy-sel" onclick="copySelectedData()">Copy Selected Data</button>
+            <button id="btnDelSelected" class="btn-top btn-del-selected" onclick="deleteSelected()">Delete</button>
+            <button class="btn-top btn-clear" onclick="clearAll()">Clear All</button>
+        </div>
     </div>
+
     <div class="card-form">
         <input type="text" id="accName" placeholder="Account Name (e.g. Email)" autocomplete="off">
         <input type="text" id="accKey" placeholder="Secret Key" autocomplete="off">
         <textarea id="accBackup" placeholder="Backup Codes / Notes" rows="2"></textarea>
         <button class="btn-save" onclick="saveAccount()">Save Account</button>
     </div>
+
     <div id="displayList"></div>
 </div>
+
 <script>
-    let accounts = JSON.parse(localStorage.getItem('ux_mail_v1') || '[]');
+    let accounts = JSON.parse(localStorage.getItem('ux_mail_v3') || '[]');
 
     function saveAccount() {
         const name = document.getElementById('accName').value.trim();
@@ -62,34 +72,59 @@
         const backup = document.getElementById('accBackup').value;
         if (name && keyRaw) {
             accounts.push({ name, key: keyRaw, backup });
-            localStorage.setItem('ux_mail_v1', JSON.stringify(accounts));
+            localStorage.setItem('ux_mail_v3', JSON.stringify(accounts));
             location.reload();
         }
     }
 
-    // Fungsi untuk menambah spasi setiap 4 karakter
     function formatKeyWithSpaces(str) {
         return str.match(/.{1,4}/g).join(' ');
     }
 
+    function toggleSelectAll() {
+        const isChecked = document.getElementById('selectAll').checked;
+        document.querySelectorAll('.acc-check').forEach(c => c.checked = isChecked);
+        updateUI();
+    }
+
     function updateUI() {
         const selected = document.querySelectorAll('.acc-check:checked').length;
-        document.getElementById('count').innerText = selected;
         document.getElementById('btnDelSelected').style.display = selected > 0 ? 'inline-block' : 'none';
+        document.getElementById('btnCopySelected').style.display = selected > 0 ? 'inline-block' : 'none';
+    }
+
+    function copySelectedData() {
+        const checks = Array.from(document.querySelectorAll('.acc-check')).reverse();
+        let textToCopy = "";
+        
+        accounts.forEach((acc, i) => {
+            // Check based on the logic of reversed render
+            const visualIndex = accounts.length - 1 - i;
+            if (document.querySelectorAll('.acc-check')[visualIndex].checked) {
+                textToCopy += `${acc.name}\n${formatKeyWithSpaces(acc.key)}\n\n`;
+            }
+        });
+
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy.trim());
+            const btn = document.getElementById('btnCopySelected');
+            btn.innerText = 'COPIED!';
+            setTimeout(() => { btn.innerText = 'Copy Selected Data'; }, 1000);
+        }
     }
 
     function deleteSelected() {
         if(confirm("Delete selected accounts?")) {
             const checks = Array.from(document.querySelectorAll('.acc-check')).reverse();
             accounts = accounts.filter((_, i) => !checks[i].checked);
-            localStorage.setItem('ux_mail_v1', JSON.stringify(accounts));
+            localStorage.setItem('ux_mail_v3', JSON.stringify(accounts));
             location.reload();
         }
     }
 
     function clearAll() {
         if(confirm("Wipe all data?")) {
-            localStorage.removeItem('ux_mail_v1');
+            localStorage.removeItem('ux_mail_v3');
             location.reload();
         }
     }
@@ -100,22 +135,22 @@
         div.innerHTML = '';
         [...accounts].reverse().forEach((acc, i) => {
             const originalIndex = accounts.length - 1 - i;
-            const formattedKey = formatKeyWithSpaces(acc.key);
+            const formattedDisplay = formatKeyWithSpaces(acc.key);
             div.innerHTML += `
                 <div class="acc-item">
                     <div style="padding-top:4px"><input type="checkbox" class="acc-check" onclick="updateUI()"></div>
                     <div class="content-area">
                         <div class="acc-header">
-                            <span class="acc-name" id="mail-${originalIndex}">${acc.name}</span>
-                            <button class="btn-mail" onclick="copyRaw('mail-${originalIndex}')">Copy Mail</button>
+                            <span class="acc-name">${acc.name}</span>
+                            <button class="btn-action-small" onclick="navigator.clipboard.writeText('${acc.name}'); this.innerText='DONE!'; setTimeout(()=>this.innerText='COPY MAIL',800)">Copy Mail</button>
                         </div>
                         <div class="secret-row">
-                            <code class="secret-val" id="key-${originalIndex}">${formattedKey}</code>
-                            <button class="btn-small-copy" onclick="copyRaw('key-${originalIndex}')">Copy Key</button>
+                            <code class="secret-val">${formattedDisplay}</code>
+                            <button class="btn-action-small" onclick="navigator.clipboard.writeText('${formattedDisplay}'); this.innerText='DONE!'; setTimeout(()=>this.innerText='COPY KEY',800)">Copy Key</button>
                         </div>
                         <div class="otp-box">
                             <div class="otp-num" id="otp-${originalIndex}">------</div>
-                            <button class="btn-copy-main" id="btn-otp-${originalIndex}" onclick="copyRaw('otp-${originalIndex}', true)">COPY</button>
+                            <button class="btn-copy-main" id="btn-otp-${originalIndex}" onclick="copyOTP('${originalIndex}')">COPY</button>
                         </div>
                         <div class="item-footer">
                             <span id="timer-${originalIndex}">30s</span>
@@ -136,19 +171,20 @@
         accounts.forEach((acc, i) => {
             try {
                 let totp = new OTPAuth.TOTP({ secret: acc.key });
-                document.getElementById('otp-' + i).innerText = totp.generate();
-                document.getElementById('timer-' + i).innerText = (30 - (Math.floor(Date.now() / 1000) % 30)) + "s";
-            } catch (e) { if(document.getElementById('otp-' + i)) document.getElementById('otp-' + i).innerText = "ERR"; }
+                const el = document.getElementById('otp-' + i);
+                if(el) el.innerText = totp.generate();
+                const tEl = document.getElementById('timer-' + i);
+                if(tEl) tEl.innerText = (30 - (Math.floor(Date.now() / 1000) % 30)) + "s";
+            } catch (e) { }
         });
     }
 
-    function copyRaw(id, isMain = false) {
-        const text = document.getElementById(id).innerText;
+    function copyOTP(idx) {
+        const text = document.getElementById('otp-' + idx).innerText;
         navigator.clipboard.writeText(text);
-        const btn = isMain ? document.getElementById('btn-otp-' + id.split('-')[1]) : event.target;
-        const oldText = btn.innerText;
+        const btn = document.getElementById('btn-otp-' + idx);
         btn.innerText = 'DONE!';
-        setTimeout(() => btn.innerText = oldText, 800);
+        setTimeout(() => btn.innerText = 'COPY', 800);
     }
 
     function toggleEdit(i) {
@@ -158,13 +194,13 @@
 
     function saveBackup(i, val) {
         accounts[i].backup = val;
-        localStorage.setItem('ux_mail_v1', JSON.stringify(accounts));
+        localStorage.setItem('ux_mail_v3', JSON.stringify(accounts));
     }
 
     function deleteSingle(i) {
         if(confirm("Hapus akun ini?")) {
             accounts.splice(i, 1);
-            localStorage.setItem('ux_mail_v1', JSON.stringify(accounts));
+            localStorage.setItem('ux_mail_v3', JSON.stringify(accounts));
             location.reload();
         }
     }
