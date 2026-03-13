@@ -45,16 +45,16 @@
     <div class="header-section">
         <h2 style="font-size: 18px; margin: 0;">2FA Authenticator</h2>
         <div class="top-btns">
-            <button id="btnDelSelected" class="btn-del-selected" onclick="deleteSelected()">Hapus Terpilih (<span id="countDel">0</span>)</button>
+            <button id="btnDelSelected" class="btn-del-selected" onclick="deleteSelected()">Delete Selected (<span id="countDel">0</span>)</button>
             <button id="btnClear" class="btn-clear-all" onclick="clearAll()" style="display:none">Clear All</button>
         </div>
     </div>
     
     <div class="card-add">
-        <input type="text" id="accName" placeholder="Nama Akun" autocomplete="off" spellcheck="false">
+        <input type="text" id="accName" placeholder="Mail Account" autocomplete="off" spellcheck="false">
         <input type="text" id="accKey" placeholder="Secret Key" autocomplete="off" spellcheck="false">
-        <textarea id="accBackup" placeholder="Backup Codes (Opsional)" autocomplete="off" spellcheck="false"></textarea>
-        <button class="btn-save" onclick="saveAccount()">SIMPAN AKUN BARU</button>
+        <textarea id="accBackup" placeholder="Backup Codes (Optional)" autocomplete="off" spellcheck="false"></textarea>
+        <button class="btn-save" onclick="saveAccount()">SAVE ACCOUNT</button>
     </div>
 
     <div id="displayList"></div>
