@@ -118,4 +118,57 @@
                             <span id="timer-${originalIndex}">30s</span>
                             <div>
                                 <button class="btn-link" onclick="toggleEdit(${originalIndex})">Notes</button>
-                                <button class="btn-link" style="color:var(--danger);margin-
+                                <button class="btn-link" style="color:var(--danger);margin-left:12px" onclick="deleteSingle(${originalIndex})">Delete</button>
+                            </div>
+                        </div>
+                        <div id="ed-${originalIndex}" style="display:none;margin-top:10px">
+                            <textarea oninput="saveBackup(${originalIndex}, this.value)" style="background:#1a1a1a; color:#fff; border:1px solid #333; width:100%; border-radius:5px;">${acc.backup || ''}</textarea>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function updateCodes() {
+        accounts.forEach((acc, i) => {
+            try {
+                let totp = new OTPAuth.TOTP({ secret: acc.key });
+                document.getElementById('otp-' + i).innerText = totp.generate();
+                document.getElementById('timer-' + i).innerText = (30 - (Math.floor(Date.now() / 1000) % 30)) + "s";
+            } catch (e) { 
+                if(document.getElementById('otp-' + i)) document.getElementById('otp-' + i).innerText = "ERR"; 
+            }
+        });
+    }
+
+    function copyText(id, isMain = false) {
+        navigator.clipboard.writeText(document.getElementById(id).innerText);
+        const btn = isMain ? document.getElementById('btn-otp-' + id.split('-')[1]) : event.target;
+        const old = btn.innerText; btn.innerText = 'DONE!';
+        setTimeout(() => btn.innerText = old, 800);
+    }
+
+    function toggleEdit(i) {
+        const e = document.getElementById('ed-' + i);
+        e.style.display = e.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveBackup(i, val) {
+        accounts[i].backup = val;
+        localStorage.setItem('client_tools_v3', JSON.stringify(accounts));
+    }
+
+    function deleteSingle(i) {
+        if(confirm("Hapus akun ini?")) {
+            accounts.splice(i, 1);
+            localStorage.setItem('client_tools_v3', JSON.stringify(accounts));
+            location.reload();
+        }
+    }
+
+    render();
+    setInterval(updateCodes, 1000);
+    updateCodes();
+</script>
+</body>
+</html>
