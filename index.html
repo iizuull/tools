@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v24.6</title>
+    <title>2FA Pro Cloud v24.8</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -169,18 +169,13 @@
     function addSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
 
     function saveAccount() {
-        const nIn = document.getElementById('accName');
-        const kIn = document.getElementById('accKey');
-        const name = nIn.value.trim().toLowerCase();
-        const key = kIn.value.replace(/\s/g, '').toUpperCase();
+        const nIn = document.getElementById('accName'), kIn = document.getElementById('accKey');
+        const name = nIn.value.trim().toLowerCase(), key = kIn.value.replace(/\s/g, '').toUpperCase();
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
         if (!name || !key) return alert("Isi Email dan Key!");
-        if (!emailPattern.test(name)) return alert("Input harus format email! (Contoh: user@gmail.com)");
+        if (!emailPattern.test(name)) return alert("Input harus format email!");
         if (accounts.some(acc => acc.name.toLowerCase() === name)) return alert("Email sudah ada!");
-
-        const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date });
+        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date: new Date().toLocaleString('id-ID') });
         nIn.value = ''; kIn.value = '';
     }
 
@@ -188,19 +183,13 @@
         const div = document.getElementById('displayList');
         const searchRaw = document.getElementById('searchInput').value.trim().toLowerCase();
         const searchTerms = searchRaw.split(/[\n\s,]+/).filter(t => t !== "");
-        
         let filtered = [...accounts].reverse();
         if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
-        
         if (searchTerms.length > 0) {
             filtered = filtered.filter(acc => {
-                return searchTerms.some(term => 
-                    acc.name.toLowerCase().includes(term) || 
-                    acc.key.toLowerCase().includes(term.replace(/\s/g, ''))
-                );
+                return searchTerms.some(term => acc.name.toLowerCase().includes(term));
             });
         }
-        
         document.getElementById('selectionBar').style.display = filtered.length > 0 ? 'flex' : 'none';
         div.innerHTML = '';
         filtered.forEach(acc => {
@@ -208,12 +197,10 @@
             if (acc.status === 'G2G') sClass = 'status-uploaded';
             if (acc.status === 'SOLD') sClass = 'status-sold';
             if (acc.status === 'DISABLE') sClass = 'status-disable';
-
             div.innerHTML += `
                 <div class="acc-item" data-id="${acc.id}">
                     <input type="checkbox" class="acc-check" onclick="updateSelCount()">
                     <div style="flex-grow:1">
-                        <span style="font-size:8px; color:var(--gray); display:block; margin-bottom:4px">${acc.date || ''}</span>
                         <div style="display:flex; justify-content:space-between">
                             <div><span class="email-display">${highlightText(acc.name, searchTerms)}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
                             <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
@@ -228,7 +215,7 @@
                         <div style="display:flex; gap:10px">
                             <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
                             <button class="btn-action-small" onclick="copyText('${addSpaces(acc.key)}', this, 'KEY')">KEY</button>
-                            <button onclick="if(confirm('Hapus akun ini?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
+                            <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
                         </div>
                     </div>
                 </div>`;
@@ -256,9 +243,8 @@
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
             if (item.querySelector('.acc-check').checked) {
-                const id = item.getAttribute('data-id');
-                const acc = accounts.find(a => a.id === id);
-                text += `${acc.name}\nsayamanusia\n${addSpaces(acc.key)}\n\n`;
+                const id = item.getAttribute('data-id'), acc = accounts.find(a => a.id === id);
+                text += `${acc.name}\n${addSpaces(acc.key)}\n\n`;
             }
         });
         if (!text) return alert("Pilih akun!");
@@ -266,40 +252,17 @@
         alert("Data Copied!");
     }
 
-    function toggleSelectAll() { document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked); updateSelCount(); }
+    function toggleSelectAll() { const isChecked = document.getElementById('selectAll').checked; document.querySelectorAll('.acc-check').forEach(c => c.checked = isChecked); updateSelCount(); }
     function updateSelCount() { document.getElementById('selCount').innerText = document.querySelectorAll('.acc-check:checked').length + " selected"; }
-    
-    function copyTextQuick(txt, el) {
-        navigator.clipboard.writeText(txt);
-        const label = document.getElementById('pwLabel');
-        label.innerText = "COPIED!";
-        label.style.color = "var(--success)";
-        setTimeout(() => { label.innerText = "KLIK UNTUK SALIN"; label.style.color = "var(--gray)"; }, 1000);
-    }
-
-    function copyText(txt, el, label) {
-        navigator.clipboard.writeText(txt);
-        const old = el.innerText;
-        el.innerText = "OK";
-        setTimeout(() => el.innerText = label, 800);
-    }
+    function copyTextQuick(txt, el) { navigator.clipboard.writeText(txt); const label = document.getElementById('pwLabel'); label.innerText = "COPIED!"; label.style.color = "var(--success)"; setTimeout(() => { label.innerText = "KLIK UNTUK SALIN"; label.style.color = "var(--gray)"; }, 1000); }
+    function copyText(txt, el, label) { navigator.clipboard.writeText(txt); el.innerText = "OK"; setTimeout(() => el.innerText = label, 800); }
 
     function copyOTP(id) {
         const otpText = document.getElementById('otp-' + id).innerText;
         navigator.clipboard.writeText(otpText);
         const numEl = document.getElementById('otp-' + id), btnEl = document.getElementById('btn-' + id), boxEl = document.getElementById('box-' + id);
-        numEl.style.color = "var(--success)";
-        btnEl.innerText = "DONE";
-        btnEl.style.background = "var(--success)";
-        btnEl.style.color = "black";
-        boxEl.style.borderColor = "var(--success)";
-        setTimeout(() => {
-            numEl.style.color = "var(--primary)";
-            btnEl.innerText = "COPY OTP";
-            btnEl.style.background = "var(--primary)";
-            btnEl.style.color = "white";
-            boxEl.style.borderColor = "var(--border)";
-        }, 1000);
+        numEl.style.color = "var(--success)"; btnEl.innerText = "DONE"; btnEl.style.background = "var(--success)"; btnEl.style.color = "black"; boxEl.style.borderColor = "var(--success)";
+        setTimeout(() => { numEl.style.color = "var(--primary)"; btnEl.innerText = "COPY OTP"; btnEl.style.background = "var(--primary)"; btnEl.style.color = "white"; boxEl.style.borderColor = "var(--border)"; }, 1000);
     }
 
     function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
