@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v24.0</title>
+    <title>2FA Pro Cloud v24.6</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -30,7 +30,7 @@
         
         .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; font-family: inherit; }
-        textarea { height: 60px; resize: none; }
+        textarea { height: 80px; resize: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
 
         .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; }
@@ -38,7 +38,6 @@
         .email-display { font-weight: bold; font-size: 14px; display: block; }
         .key-display { font-family: monospace; font-size: 11px; color: var(--gray); display: block; margin-top: 2px; }
         
-        /* Highlight Stabilo */
         mark { background: #ff4444; color: white; padding: 0 2px; border-radius: 2px; }
 
         .status-badge { font-size: 8px; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-weight: 900; border: none; }
@@ -82,7 +81,7 @@
         </div>
 
         <div class="card-form">
-            <input type="text" id="accName" placeholder="Email Akun" autocomplete="off">
+            <input type="text" id="accName" placeholder="Alamat Email (User@gmail.com)" autocomplete="off">
             <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.replace(/\s/g, '').toUpperCase()" autocomplete="off">
             <button class="btn-save" onclick="saveAccount()">Save Account</button>
         </div>
@@ -96,16 +95,19 @@
         </div>
 
         <div class="selection-bar" id="selectionBar">
-            <div style="display:flex; justify-content:space-between; align-items:center"><label style="font-weight:bold"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label><span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <label style="font-weight:bold"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
+                <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
+            </div>
             <div class="sel-actions">
                 <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy Data</button>
                 <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">Mark G2G</button>
                 <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Mark SOLD</button>
-                <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkUpdateStatus('DISABLE')">Mark DISABLE</button>
+                <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkDelete()">Hapus Terpilih</button>
             </div>
         </div>
 
-        <textarea id="searchInput" placeholder="Cari email (bisa banyak baris)..." oninput="render()"></textarea>
+        <textarea id="searchInput" placeholder="Cari banyak email (paste list ke bawah)..." oninput="render()"></textarea>
         <div id="displayList"></div>
     </div>
 </div>
@@ -167,10 +169,16 @@
     function addSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
 
     function saveAccount() {
-        const nIn = document.getElementById('accName'), kIn = document.getElementById('accKey');
-        const name = nIn.value.trim(), key = kIn.value.replace(/\s/g, '').toUpperCase();
-        if (!name || !key) return alert("Isi data!");
-        if (accounts.some(acc => acc.name.toLowerCase() === name.toLowerCase())) return alert("Email sudah ada!");
+        const nIn = document.getElementById('accName');
+        const kIn = document.getElementById('accKey');
+        const name = nIn.value.trim().toLowerCase();
+        const key = kIn.value.replace(/\s/g, '').toUpperCase();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name || !key) return alert("Isi Email dan Key!");
+        if (!emailPattern.test(name)) return alert("Input harus format email! (Contoh: user@gmail.com)");
+        if (accounts.some(acc => acc.name.toLowerCase() === name)) return alert("Email sudah ada!");
+
         const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         db.ref('users/' + userUid).push({ name, key, status: 'STOK', date });
         nIn.value = ''; kIn.value = '';
@@ -220,7 +228,7 @@
                         <div style="display:flex; gap:10px">
                             <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
                             <button class="btn-action-small" onclick="copyText('${addSpaces(acc.key)}', this, 'KEY')">KEY</button>
-                            <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
+                            <button onclick="if(confirm('Hapus akun ini?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
                         </div>
                     </div>
                 </div>`;
@@ -236,13 +244,21 @@
     }
 
     function bulkUpdateStatus(s) { document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); }); }
+    
+    function bulkDelete() {
+        const selectedIds = [];
+        document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) selectedIds.push(item.getAttribute('data-id')); });
+        if (selectedIds.length === 0) return alert("Pilih akun!");
+        if (confirm(`Hapus permanen ${selectedIds.length} akun?`)) { selectedIds.forEach(id => db.ref(`users/${userUid}/${id}`).remove()); document.getElementById('selectAll').checked = false; }
+    }
+
     function bulkCopy() {
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
             if (item.querySelector('.acc-check').checked) {
                 const id = item.getAttribute('data-id');
                 const acc = accounts.find(a => a.id === id);
-                text += `${acc.name}\n${addSpaces(acc.key)}\n\n`;
+                text += `${acc.name}\nsayamanusia\n${addSpaces(acc.key)}\n\n`;
             }
         });
         if (!text) return alert("Pilih akun!");
@@ -252,7 +268,6 @@
 
     function toggleSelectAll() { document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked); updateSelCount(); }
     function updateSelCount() { document.getElementById('selCount').innerText = document.querySelectorAll('.acc-check:checked').length + " selected"; }
-    function bulkDelete() { if (confirm("Hapus akun?")) document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).remove(); }); }
     
     function copyTextQuick(txt, el) {
         navigator.clipboard.writeText(txt);
@@ -272,19 +287,12 @@
     function copyOTP(id) {
         const otpText = document.getElementById('otp-' + id).innerText;
         navigator.clipboard.writeText(otpText);
-        
-        const numEl = document.getElementById('otp-' + id);
-        const btnEl = document.getElementById('btn-' + id);
-        const boxEl = document.getElementById('box-' + id);
-
-        // Ubah jadi Hijau
+        const numEl = document.getElementById('otp-' + id), btnEl = document.getElementById('btn-' + id), boxEl = document.getElementById('box-' + id);
         numEl.style.color = "var(--success)";
         btnEl.innerText = "DONE";
         btnEl.style.background = "var(--success)";
         btnEl.style.color = "black";
         boxEl.style.borderColor = "var(--success)";
-
-        // Balikin ke Biru setelah 1 detik
         setTimeout(() => {
             numEl.style.color = "var(--primary)";
             btnEl.innerText = "COPY OTP";
