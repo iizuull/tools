@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v24.8</title>
+    <title>2FA Pro Cloud v25.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.2/otpauth.umd.min.js"></script>
     <style>
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --purple: #a855f7; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; margin: 0; }
         .wrapper { width: 100%; max-width: 480px; }
         .header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
@@ -20,41 +20,39 @@
 
         .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
-        .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; gap: 10px; }
-        .sel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-bulk { padding: 8px; border-radius: 6px; border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .selection-bar { display: none; background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; }
+        .btn-bulk { border: none; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; }
 
-        .filter-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .tab { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
+        .filter-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab { flex: 1; min-width: 65px; padding: 8px 2px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
-        .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .card-form { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; font-family: inherit; }
-        textarea { height: 80px; resize: none; }
+        textarea { height: 60px; resize: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
 
-        .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; }
-        .acc-check { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
-        .email-display { font-weight: bold; font-size: 14px; display: block; }
-        .key-display { font-family: monospace; font-size: 11px; color: var(--gray); display: block; margin-top: 2px; }
+        .acc-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; display: flex; gap: 10px; }
+        .acc-check { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .email-display { font-weight: bold; font-size: 13px; display: block; }
+        .key-display { font-family: monospace; font-size: 10px; color: var(--gray); display: block; margin-top: 2px; }
         
         mark { background: #ff4444; color: white; padding: 0 2px; border-radius: 2px; }
-
-        .status-badge { font-size: 8px; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-weight: 900; border: none; }
+        .status-badge { font-size: 8px; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-weight: 900; border: none; }
         .status-uploaded { background: var(--success); color: #000; }
         .status-pending { background: var(--orange); color: #000; }
         .status-sold { background: var(--purple); color: #fff; }
         .status-disable { background: var(--danger); color: #fff; }
 
-        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); transition: 0.3s; }
-        .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; transition: 0.3s; }
-        .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 8px; border-radius: 8px; margin: 8px 0; border: 1px solid var(--border); }
+        .otp-num { font-family: monospace; font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 5px; font-size: 9px; cursor: pointer; font-weight: bold; }
         #main-app, #login-screen { display: none; }
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <div id="login-screen" style="text-align: center; margin-top: 100px;">
+    <div id="login-screen" style="text-align: center; margin-top: 80px;">
         <h2>2FA AUTH CLOUD</h2>
         <button onclick="login()" style="padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; background: white; color: black;">SIGN IN WITH GOOGLE</button>
     </div>
@@ -81,7 +79,7 @@
         </div>
 
         <div class="card-form">
-            <input type="text" id="accName" placeholder="Alamat Email (User@gmail.com)" autocomplete="off">
+            <input type="text" id="accName" placeholder="Email Akun" autocomplete="off">
             <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.replace(/\s/g, '').toUpperCase()" autocomplete="off">
             <button class="btn-save" onclick="saveAccount()">Save Account</button>
         </div>
@@ -95,15 +93,16 @@
         </div>
 
         <div class="selection-bar" id="selectionBar">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <label style="font-weight:bold"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                <label style="font-weight:bold; font-size:12px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
                 <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
             </div>
-            <div class="sel-actions">
-                <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy Data</button>
-                <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">Mark G2G</button>
-                <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Mark SOLD</button>
-                <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkDelete()">Hapus Terpilih</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <button class="btn-bulk" style="background:var(--primary); color:white; padding: 8px;" onclick="bulkCopy()">Copy</button>
+                <button class="btn-bulk" style="background:var(--orange); color:black; padding: 8px;" onclick="bulkUpdateStatus('STOK')">Stok</button>
+                <button class="btn-bulk" style="background:var(--success); color:black; padding: 8px;" onclick="bulkUpdateStatus('G2G')">G2G</button>
+                <button class="btn-bulk" style="background:var(--purple); color:white; padding: 8px;" onclick="bulkUpdateStatus('SOLD')">Sold</button>
+                <button class="btn-bulk" style="background:var(--danger); color:white; padding: 8px; grid-column: span 2;" onclick="bulkDelete()">Hapus Terpilih</button>
             </div>
         </div>
 
@@ -190,7 +189,7 @@
                 return searchTerms.some(term => acc.name.toLowerCase().includes(term));
             });
         }
-        document.getElementById('selectionBar').style.display = filtered.length > 0 ? 'flex' : 'none';
+        document.getElementById('selectionBar').style.display = (filtered.length > 0) ? 'flex' : 'none';
         div.innerHTML = '';
         filtered.forEach(acc => {
             let sClass = 'status-pending';
@@ -244,7 +243,7 @@
         document.querySelectorAll('.acc-item').forEach(item => {
             if (item.querySelector('.acc-check').checked) {
                 const id = item.getAttribute('data-id'), acc = accounts.find(a => a.id === id);
-                text += `${acc.name}\n${addSpaces(acc.key)}\n\n`;
+                text += `${acc.name}\nsayamanusia\n${addSpaces(acc.key)}\n\n`;
             }
         });
         if (!text) return alert("Pilih akun!");
