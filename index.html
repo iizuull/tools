@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v25.4</title>
+    <title>2FA Pro Cloud v25.5</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -12,8 +12,6 @@
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --purple: #a855f7; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; margin: 0; }
         .wrapper { width: 100%; max-width: 480px; }
-        
-        /* Stats & Header */
         .header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
         .stat-box { background: #1a1a1a; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
@@ -22,24 +20,21 @@
 
         .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
-        /* TAB FILTER BISA DI SCROLL KE SAMPING */
-        .filter-tabs { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; -ms-overflow-style: none; }
+        .filter-tabs { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
         .filter-tabs::-webkit-scrollbar { display: none; }
         .tab { flex: 0 0 auto; min-width: 75px; padding: 10px 5px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* SELECTION BAR GRID 2 BARIS */
+        /* SELECTION BAR UPDATE v25.5 */
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid var(--primary); margin-bottom: 15px; }
         .btn-bulk { border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 6px; padding: 10px 5px; }
         .grid-bulk { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
 
-        /* Input Form */
         .card-form { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; font-family: inherit; }
         textarea { height: 60px; resize: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
 
-        /* Account Item */
         .acc-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; display: flex; gap: 10px; }
         .acc-check { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
         .email-display { font-weight: bold; font-size: 14px; display: block; }
@@ -71,12 +66,10 @@
                 <h3 style="margin:0">Inventory Global</h3>
                 <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
             </div>
-            
             <div class="pw-quick-bar" onclick="copyTextQuick('sayamanusia', this)">
                 <span style="font-size:11px; font-weight:bold; color:var(--orange)">PW: sayamanusia</span>
                 <span id="pwLabel" style="font-size:9px; color:var(--gray)">KLIK UNTUK SALIN</span>
             </div>
-
             <div class="stats-grid">
                 <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
                 <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
@@ -110,7 +103,8 @@
                 <button class="btn-bulk" style="background:var(--orange); color:black" onclick="bulkUpdateStatus('STOK')">Stok</button>
                 <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">G2G</button>
                 <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Sold</button>
-                <button id="btnBulkDelete" class="btn-bulk" style="background:var(--danger); color:white; grid-column: span 4; margin-top: 5px; display: none;" onclick="bulkDelete()">Hapus Akun Terpilih</button>
+                <button class="btn-bulk" style="background:var(--danger); color:white; grid-column: span 4; margin-top: 5px;" onclick="bulkUpdateStatus('DISABLE')">Pindahkan ke Disable (Mati)</button>
+                <button id="btnBulkDelete" class="btn-bulk" style="background:var(--gray); color:white; grid-column: span 4; margin-top: 5px; display: none;" onclick="bulkDelete()">Hapus Permanen</button>
             </div>
         </div>
 
@@ -161,16 +155,6 @@
             document.getElementById('countDisable').innerText = accounts.filter(a => a.status === 'DISABLE').length;
             render();
         });
-    }
-
-    function highlightText(text, terms) {
-        if (!terms || terms.length === 0) return text;
-        let highlighted = text;
-        terms.forEach(term => {
-            const regex = new RegExp(`(${term})`, 'gi');
-            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
-        });
-        return highlighted;
     }
 
     function addSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
@@ -230,6 +214,16 @@
         updateSelCount();
     }
 
+    function highlightText(text, terms) {
+        if (!terms || terms.length === 0) return text;
+        let highlighted = text;
+        terms.forEach(term => {
+            const regex = new RegExp(`(${term})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+        });
+        return highlighted;
+    }
+
     function cycleStatus(id, current) {
         let next = 'STOK';
         if (current === 'STOK') next = 'G2G';
@@ -238,7 +232,13 @@
         db.ref(`users/${userUid}/${id}`).update({ status: next });
     }
 
-    function bulkUpdateStatus(s) { document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); }); }
+    function bulkUpdateStatus(s) { 
+        document.querySelectorAll('.acc-item').forEach(item => { 
+            if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); 
+        }); 
+        document.getElementById('selectAll').checked = false;
+        updateSelCount();
+    }
     
     function bulkDelete() {
         const selectedIds = [];
@@ -265,8 +265,6 @@
     function updateSelCount() { 
         const count = document.querySelectorAll('.acc-check:checked').length;
         document.getElementById('selCount').innerText = count + " selected"; 
-        
-        // Hapus massal hanya muncul di menu SOLD atau DISABLE
         const btnDelete = document.getElementById('btnBulkDelete');
         if (count > 0 && (currentFilter === 'SOLD' || currentFilter === 'DISABLE')) {
             btnDelete.style.display = 'block';
