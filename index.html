@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v25.1</title>
+    <title>2FA Pro Cloud v25.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -21,7 +21,7 @@
         .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
         .selection-bar { display: none; background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; }
-        .btn-bulk { border: none; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; padding: 8px; }
+        .btn-bulk { border: none; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; padding: 10px 5px; }
 
         .filter-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .tab { flex: 0 0 auto; min-width: 65px; padding: 8px 5px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
@@ -97,12 +97,12 @@
                 <label style="font-weight:bold; font-size:12px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
                 <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
-                <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy</button>
-                <button class="btn-bulk" style="background:var(--orange); color:black" onclick="bulkUpdateStatus('STOK')">Stok</button>
-                <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">G2G</button>
-                <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Sold</button>
-                <button id="btnBulkDelete" class="btn-bulk" style="background:var(--danger); color:white; grid-column: span 4; display: none;" onclick="bulkDelete()">Hapus Terpilih</button>
+            <div style="display: flex; gap: 5px;">
+                <button class="btn-bulk" style="background:var(--primary); color:white; flex:1" onclick="bulkCopy()">Copy</button>
+                <button class="btn-bulk" style="background:var(--orange); color:black; flex:1" onclick="bulkUpdateStatus('STOK')">Stok</button>
+                <button class="btn-bulk" style="background:var(--success); color:black; flex:1" onclick="bulkUpdateStatus('G2G')">G2G</button>
+                <button class="btn-bulk" style="background:var(--purple); color:white; flex:1" onclick="bulkUpdateStatus('SOLD')">Sold</button>
+                <button id="btnBulkDelete" class="btn-bulk" style="background:var(--danger); color:white; flex:1; display: none;" onclick="bulkDelete()">Hapus</button>
             </div>
         </div>
 
@@ -239,12 +239,13 @@
         if (confirm(`Hapus permanen ${selectedIds.length} akun?`)) { selectedIds.forEach(id => db.ref(`users/${userUid}/${id}`).remove()); document.getElementById('selectAll').checked = false; }
     }
 
+    // UPDATE: FORMAT COPY KEMBALI KE EMAIL DAN KEY (BAWAHNYA)
     function bulkCopy() {
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
             if (item.querySelector('.acc-check').checked) {
                 const id = item.getAttribute('data-id'), acc = accounts.find(a => a.id === id);
-                text += `${acc.name}\nsayamanusia\n${addSpaces(acc.key)}\n\n`;
+                text += `${acc.name}\n${addSpaces(acc.key)}\n\n`;
             }
         });
         if (!text) return alert("Pilih akun!");
@@ -257,7 +258,7 @@
     function updateSelCount() { 
         const count = document.querySelectorAll('.acc-check:checked').length;
         document.getElementById('selCount').innerText = count + " selected"; 
-        // Hanya tampilkan tombol hapus massal jika lebih dari 5 yang dipilih
+        // Munculkan tombol hapus jika > 5 terpilih
         document.getElementById('btnBulkDelete').style.display = (count > 5) ? 'block' : 'none';
     }
 
