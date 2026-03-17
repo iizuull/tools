@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v19.1</title>
+    <title>2FA Pro Cloud v19.5</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -12,7 +12,12 @@
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --purple: #a855f7; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .wrapper { width: 100%; max-width: 480px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+        .stat-box { background: #1a1a1a; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
+        .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
+        .stat-box b { font-size: 12px; }
+
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; gap: 10px; }
         .sel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn-bulk { padding: 8px; border-radius: 6px; border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
@@ -45,8 +50,16 @@
 
     <div id="main-app">
         <div class="header">
-            <div><h3 style="margin:0">Stock Inventory</h3><div style="font-size:10px; color:var(--gray); margin-top:5px;"><span id="stTotal">Total: 0</span> • <span id="stBelum" style="color:var(--orange)">Stok: 0</span></div></div>
-            <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h3 style="margin:0">Inventory Cloud</h3>
+                <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
+                <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
+                <div class="stat-box"><small style="color:var(--success)">G2G</small><b id="countG2G">0</b></div>
+                <div class="stat-box"><small style="color:var(--purple)">Laku</small><b id="countLaku">0</b></div>
+            </div>
         </div>
 
         <div class="card-form">
@@ -112,8 +125,13 @@
         db.ref('users/' + userUid).on('value', snapshot => {
             accounts = [];
             snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
-            document.getElementById('stTotal').innerText = "Total: " + accounts.length;
-            document.getElementById('stBelum').innerText = "Stok: " + accounts.filter(a => a.status === 'BELUM').length;
+            
+            // Update Stats
+            document.getElementById('countTotal').innerText = accounts.length;
+            document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'BELUM').length;
+            document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'UPLOAD G2G').length;
+            document.getElementById('countLaku').innerText = accounts.filter(a => a.status === 'LAKU').length;
+            
             render();
         });
     }
