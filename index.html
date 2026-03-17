@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v21 - Global G2G</title>
+    <title>2FA Pro Cloud v22.3</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -18,6 +18,9 @@
         .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
         .stat-box b { font-size: 12px; }
 
+        /* Style Password Bar */
+        .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; gap: 10px; }
         .sel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn-bulk { padding: 8px; border-radius: 6px; border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
@@ -25,8 +28,7 @@
         .filter-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .tab { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .tab-disable.active { background: var(--danger); border-color: var(--danger); }
-
+        
         .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
@@ -58,9 +60,15 @@
     <div id="main-app">
         <div class="header">
             <div style="display:flex; justify-content:space-between; align-items:center">
-                <h3 style="margin:0">Inventory Cloud</h3>
+                <h3 style="margin:0">Inventory Global</h3>
                 <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
             </div>
+            
+            <div class="pw-quick-bar" onclick="copyTextQuick('sayamanusia', this)">
+                <span style="font-size:11px; font-weight:bold; color:var(--orange)">PW: sayamanusia</span>
+                <span id="pwLabel" style="font-size:9px; color:var(--gray)">KLIK UNTUK SALIN</span>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
                 <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
@@ -80,7 +88,7 @@
             <div class="tab" onclick="setFilter('BELUM', this)">BELUM</div>
             <div class="tab" onclick="setFilter('UPLOAD G2G', this)">G2G</div>
             <div class="tab" onclick="setFilter('LAKU', this)">LAKU</div>
-            <div class="tab" id="tab-disable" onclick="setFilter('DISABLE', this)" style="color:var(--danger)">DISABLE</div>
+            <div class="tab" onclick="setFilter('DISABLE', this)" style="color:var(--danger)">DISABLE</div>
         </div>
 
         <div class="selection-bar" id="selectionBar">
@@ -133,12 +141,10 @@
         db.ref('users/' + userUid).on('value', snapshot => {
             accounts = [];
             snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
-            
             document.getElementById('countTotal').innerText = accounts.length;
             document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'BELUM').length;
             document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'UPLOAD G2G').length;
             document.getElementById('countDisable').innerText = accounts.filter(a => a.status === 'DISABLE').length;
-            
             render();
         });
     }
@@ -180,13 +186,15 @@
                             <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'BELUM'}</button>
                         </div>
                         <div class="otp-box">
-                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer" onclick="copyOTP('${acc.id}')"><span style="font-size:8px; color:var(--gray)" id="t-${acc.id}">30s</span><div class="otp-num" id="otp-${acc.id}">------</div></div>
+                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer" onclick="copyOTP('${acc.id}')">
+                                <span style="font-size:8px; color:var(--gray)" id="t-${acc.id}">30s</span>
+                                <div class="otp-num" id="otp-${acc.id}">------</div>
+                            </div>
                             <button class="btn-action-small" style="background:var(--primary)" onclick="copyOTP('${acc.id}', this)">COPY OTP</button>
                         </div>
                         <div style="display:flex; gap:10px">
                             <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
                             <button class="btn-action-small" onclick="copyText('${addSpaces(acc.key)}', this, 'KEY')">KEY</button>
-                            <button class="btn-action-small" style="background:#4285F4" onclick="window.open('https://accounts.google.com/signin/v2/identifier?Email=${acc.name}', '_blank')">VERIFY</button>
                             <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
                         </div>
                     </div>
@@ -208,7 +216,6 @@
                 db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); 
             }
         }); 
-        alert("Status updated to " + s);
     }
 
     function bulkCopy() {
@@ -227,15 +234,28 @@
 
     function toggleSelectAll() { document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked); updateSelCount(); }
     function updateSelCount() { document.getElementById('selCount').innerText = document.querySelectorAll('.acc-check:checked').length + " selected"; }
-    function bulkDelete() { if (confirm("Hapus akun terpilih secara permanen?")) document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).remove(); }); }
-    function copyText(txt, btn, label) { navigator.clipboard.writeText(txt); btn.innerText = 'OK'; setTimeout(() => btn.innerText = label, 800); }
-    function copyOTP(id, btn) { navigator.clipboard.writeText(document.getElementById('otp-' + id).innerText); if(btn) { btn.innerText = 'DONE'; setTimeout(() => btn.innerText = 'COPY OTP', 800); } }
-    function setFilter(f, el) { 
-        currentFilter = f; 
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
-        el.classList.add('active'); 
-        render(); 
+    function bulkDelete() { if (confirm("Hapus akun?")) document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).remove(); }); }
+    
+    function copyTextQuick(txt, el) {
+        navigator.clipboard.writeText(txt);
+        const label = document.getElementById('pwLabel');
+        label.innerText = "COPIED!";
+        label.style.color = "var(--success)";
+        setTimeout(() => {
+            label.innerText = "KLIK UNTUK SALIN";
+            label.style.color = "var(--gray)";
+        }, 1000);
     }
+
+    function copyText(txt, el, label) {
+        navigator.clipboard.writeText(txt);
+        const old = el.innerText;
+        el.innerText = "OK";
+        setTimeout(() => el.innerText = label, 800);
+    }
+
+    function copyOTP(id, btn) { navigator.clipboard.writeText(document.getElementById('otp-' + id).innerText); if(btn) { btn.innerText = 'DONE'; setTimeout(() => btn.innerText = 'COPY OTP', 800); } }
+    function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
     function updateCodes() {
         const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
         accounts.forEach(acc => {
