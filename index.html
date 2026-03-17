@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v19.5</title>
+    <title>2FA Pro Cloud v21 - Global G2G</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -15,26 +15,33 @@
         .header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
         .stat-box { background: #1a1a1a; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
-        .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
+        .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
         .stat-box b { font-size: 12px; }
 
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; gap: 10px; }
         .sel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn-bulk { padding: 8px; border-radius: 6px; border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
         .filter-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .tab { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .tab-disable.active { background: var(--danger); border-color: var(--danger); }
+
         .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
+
         .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; }
         .acc-check { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
         .email-display { font-weight: bold; font-size: 14px; display: block; }
         .key-display { font-family: monospace; font-size: 11px; color: var(--gray); display: block; margin-top: 2px; }
+        
         .status-badge { font-size: 8px; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-weight: 900; border: none; }
         .status-uploaded { background: var(--success); color: #000; }
         .status-pending { background: var(--orange); color: #000; }
         .status-sold { background: var(--purple); color: #fff; }
+        .status-disable { background: var(--danger); color: #fff; }
+
         .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); }
         .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
         .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; }
@@ -58,7 +65,7 @@
                 <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
                 <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
                 <div class="stat-box"><small style="color:var(--success)">G2G</small><b id="countG2G">0</b></div>
-                <div class="stat-box"><small style="color:var(--purple)">Laku</small><b id="countLaku">0</b></div>
+                <div class="stat-box"><small style="color:var(--danger)">Mati</small><b id="countDisable">0</b></div>
             </div>
         </div>
 
@@ -73,6 +80,7 @@
             <div class="tab" onclick="setFilter('BELUM', this)">BELUM</div>
             <div class="tab" onclick="setFilter('UPLOAD G2G', this)">G2G</div>
             <div class="tab" onclick="setFilter('LAKU', this)">LAKU</div>
+            <div class="tab" id="tab-disable" onclick="setFilter('DISABLE', this)" style="color:var(--danger)">DISABLE</div>
         </div>
 
         <div class="selection-bar" id="selectionBar">
@@ -81,11 +89,11 @@
                 <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy Data</button>
                 <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('UPLOAD G2G')">Mark G2G</button>
                 <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('LAKU')">Mark LAKU</button>
-                <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkDelete()">Hapus</button>
+                <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkUpdateStatus('DISABLE')">Mark DISABLE</button>
             </div>
         </div>
 
-        <input type="text" id="searchInput" placeholder="Cari email..." oninput="render()" style="background:var(--card); margin-bottom:15px">
+        <input type="text" id="searchInput" placeholder="Cari email atau key..." oninput="render()" style="background:var(--card); margin-bottom:15px">
         <div id="displayList"></div>
     </div>
 </div>
@@ -126,11 +134,10 @@
             accounts = [];
             snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
             
-            // Update Stats
             document.getElementById('countTotal').innerText = accounts.length;
             document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'BELUM').length;
             document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'UPLOAD G2G').length;
-            document.getElementById('countLaku').innerText = accounts.filter(a => a.status === 'LAKU').length;
+            document.getElementById('countDisable').innerText = accounts.filter(a => a.status === 'DISABLE').length;
             
             render();
         });
@@ -150,14 +157,19 @@
 
     function render() {
         const div = document.getElementById('displayList');
-        const search = document.getElementById('searchInput').value.toLowerCase();
+        const search = document.getElementById('searchInput').value.toLowerCase().replace(/\s/g, '');
         let filtered = [...accounts].reverse();
         if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
-        filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
+        filtered = filtered.filter(a => a.name.toLowerCase().includes(search) || a.key.toLowerCase().includes(search));
+        
         document.getElementById('selectionBar').style.display = filtered.length > 0 ? 'flex' : 'none';
         div.innerHTML = '';
         filtered.forEach(acc => {
-            let sClass = acc.status === 'UPLOAD G2G' ? 'status-uploaded' : (acc.status === 'LAKU' ? 'status-sold' : 'status-pending');
+            let sClass = 'status-pending';
+            if (acc.status === 'UPLOAD G2G') sClass = 'status-uploaded';
+            if (acc.status === 'LAKU') sClass = 'status-sold';
+            if (acc.status === 'DISABLE') sClass = 'status-disable';
+
             div.innerHTML += `
                 <div class="acc-item" data-id="${acc.id}">
                     <input type="checkbox" class="acc-check" onclick="updateSelCount()">
@@ -165,7 +177,7 @@
                         <span style="font-size:8px; color:var(--gray); display:block; margin-bottom:4px">${acc.date || ''}</span>
                         <div style="display:flex; justify-content:space-between">
                             <div><span class="email-display">${acc.name}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
-                            <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status}</button>
+                            <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'BELUM'}</button>
                         </div>
                         <div class="otp-box">
                             <div style="display:flex; align-items:center; gap:8px; cursor:pointer" onclick="copyOTP('${acc.id}')"><span style="font-size:8px; color:var(--gray)" id="t-${acc.id}">30s</span><div class="otp-num" id="otp-${acc.id}">------</div></div>
@@ -174,6 +186,7 @@
                         <div style="display:flex; gap:10px">
                             <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
                             <button class="btn-action-small" onclick="copyText('${addSpaces(acc.key)}', this, 'KEY')">KEY</button>
+                            <button class="btn-action-small" style="background:#4285F4" onclick="window.open('https://accounts.google.com/signin/v2/identifier?Email=${acc.name}', '_blank')">VERIFY</button>
                             <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px; margin-left:auto">Hapus</button>
                         </div>
                     </div>
@@ -182,8 +195,20 @@
     }
 
     function cycleStatus(id, current) {
-        let next = current === 'BELUM' ? 'UPLOAD G2G' : (current === 'UPLOAD G2G' ? 'LAKU' : 'BELUM');
+        let next = 'BELUM';
+        if (current === 'BELUM') next = 'UPLOAD G2G';
+        else if (current === 'UPLOAD G2G') next = 'LAKU';
+        else if (current === 'LAKU') next = 'DISABLE';
         db.ref(`users/${userUid}/${id}`).update({ status: next });
+    }
+
+    function bulkUpdateStatus(s) { 
+        document.querySelectorAll('.acc-item').forEach(item => { 
+            if (item.querySelector('.acc-check').checked) {
+                db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); 
+            }
+        }); 
+        alert("Status updated to " + s);
     }
 
     function bulkCopy() {
@@ -200,13 +225,17 @@
         alert("Data Copied!");
     }
 
-    function bulkUpdateStatus(s) { document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); }); }
     function toggleSelectAll() { document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked); updateSelCount(); }
     function updateSelCount() { document.getElementById('selCount').innerText = document.querySelectorAll('.acc-check:checked').length + " selected"; }
-    function bulkDelete() { if (confirm("Hapus?")) document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).remove(); }); }
+    function bulkDelete() { if (confirm("Hapus akun terpilih secara permanen?")) document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).remove(); }); }
     function copyText(txt, btn, label) { navigator.clipboard.writeText(txt); btn.innerText = 'OK'; setTimeout(() => btn.innerText = label, 800); }
     function copyOTP(id, btn) { navigator.clipboard.writeText(document.getElementById('otp-' + id).innerText); if(btn) { btn.innerText = 'DONE'; setTimeout(() => btn.innerText = 'COPY OTP', 800); } }
-    function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
+    function setFilter(f, el) { 
+        currentFilter = f; 
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
+        el.classList.add('active'); 
+        render(); 
+    }
     function updateCodes() {
         const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
         accounts.forEach(acc => {
