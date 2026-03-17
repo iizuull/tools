@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v25.5</title>
+    <title>2FA Pro Cloud v25.6</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -25,7 +25,6 @@
         .tab { flex: 0 0 auto; min-width: 75px; padding: 10px 5px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* SELECTION BAR UPDATE v25.5 */
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid var(--primary); margin-bottom: 15px; }
         .btn-bulk { border: none; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 6px; padding: 10px 5px; }
         .grid-bulk { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
@@ -42,6 +41,7 @@
         
         mark { background: #ff4444; color: white; padding: 0 2px; border-radius: 2px; }
         .status-badge { font-size: 8px; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-weight: 900; border: none; }
+        
         .status-uploaded { background: var(--success); color: #000; }
         .status-pending { background: var(--orange); color: #000; }
         .status-sold { background: var(--purple); color: #fff; }
@@ -157,6 +157,16 @@
         });
     }
 
+    function highlightText(text, terms) {
+        if (!terms || terms.length === 0) return text;
+        let highlighted = text;
+        terms.forEach(term => {
+            const regex = new RegExp(`(${term})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+        });
+        return highlighted;
+    }
+
     function addSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
 
     function saveAccount() {
@@ -166,7 +176,9 @@
         if (!name || !key) return alert("Isi Email dan Key!");
         if (!emailPattern.test(name)) return alert("Input harus format email!");
         if (accounts.some(acc => acc.name.toLowerCase() === name)) return alert("Email sudah ada!");
-        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date: new Date().toLocaleString('id-ID') });
+        
+        const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date });
         nIn.value = ''; kIn.value = '';
     }
 
@@ -188,10 +200,12 @@
             if (acc.status === 'G2G') sClass = 'status-uploaded';
             if (acc.status === 'SOLD') sClass = 'status-sold';
             if (acc.status === 'DISABLE') sClass = 'status-disable';
+            
             div.innerHTML += `
                 <div class="acc-item" data-id="${acc.id}">
                     <input type="checkbox" class="acc-check" onclick="updateSelCount()">
                     <div style="flex-grow:1">
+                        <span style="font-size:8px; color:var(--gray); display:block; margin-bottom:4px">${acc.date || ''}</span>
                         <div style="display:flex; justify-content:space-between">
                             <div><span class="email-display">${highlightText(acc.name, searchTerms)}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
                             <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
@@ -212,16 +226,6 @@
                 </div>`;
         });
         updateSelCount();
-    }
-
-    function highlightText(text, terms) {
-        if (!terms || terms.length === 0) return text;
-        let highlighted = text;
-        terms.forEach(term => {
-            const regex = new RegExp(`(${term})`, 'gi');
-            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
-        });
-        return highlighted;
     }
 
     function cycleStatus(id, current) {
