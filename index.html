@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v25.2</title>
+    <title>2FA Pro Cloud v25.3</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -97,7 +97,7 @@
                 <label style="font-weight:bold; font-size:12px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
                 <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
             </div>
-            <div style="display: flex; gap: 5px;">
+            <div id="bulkActions" style="display: flex; gap: 5px;">
                 <button class="btn-bulk" style="background:var(--primary); color:white; flex:1" onclick="bulkCopy()">Copy</button>
                 <button class="btn-bulk" style="background:var(--orange); color:black; flex:1" onclick="bulkUpdateStatus('STOK')">Stok</button>
                 <button class="btn-bulk" style="background:var(--success); color:black; flex:1" onclick="bulkUpdateStatus('G2G')">G2G</button>
@@ -239,7 +239,6 @@
         if (confirm(`Hapus permanen ${selectedIds.length} akun?`)) { selectedIds.forEach(id => db.ref(`users/${userUid}/${id}`).remove()); document.getElementById('selectAll').checked = false; }
     }
 
-    // UPDATE: FORMAT COPY KEMBALI KE EMAIL DAN KEY (BAWAHNYA)
     function bulkCopy() {
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
@@ -258,8 +257,14 @@
     function updateSelCount() { 
         const count = document.querySelectorAll('.acc-check:checked').length;
         document.getElementById('selCount').innerText = count + " selected"; 
-        // Munculkan tombol hapus jika > 5 terpilih
-        document.getElementById('btnBulkDelete').style.display = (count > 5) ? 'block' : 'none';
+        
+        // HANYA MUNCUL DI SOLD ATAU DISABLE
+        const btnDelete = document.getElementById('btnBulkDelete');
+        if (count > 0 && (currentFilter === 'SOLD' || currentFilter === 'DISABLE')) {
+            btnDelete.style.display = 'block';
+        } else {
+            btnDelete.style.display = 'none';
+        }
     }
 
     function copyTextQuick(txt, el) { navigator.clipboard.writeText(txt); const label = document.getElementById('pwLabel'); label.innerText = "COPIED!"; label.style.color = "var(--success)"; setTimeout(() => { label.innerText = "KLIK UNTUK SALIN"; label.style.color = "var(--gray)"; }, 1000); }
