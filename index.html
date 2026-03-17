@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v22.3</title>
+    <title>2FA Pro Cloud v23.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -18,8 +18,7 @@
         .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
         .stat-box b { font-size: 12px; }
 
-        /* Style Password Bar */
-        .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
         .selection-bar { display: none; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; gap: 10px; }
         .sel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -73,7 +72,8 @@
                 <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
                 <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
                 <div class="stat-box"><small style="color:var(--success)">G2G</small><b id="countG2G">0</b></div>
-                <div class="stat-box"><small style="color:var(--danger)">Mati</small><b id="countDisable">0</b></div>
+                <div class="stat-box"><small style="color:var(--purple)">Sold</small><b id="countSold">0</b></div>
+                <div class="stat-box" style="grid-column: span 4; margin-top: 5px;"><small style="color:var(--danger)">Mati / Disable</small><b id="countDisable">0</b></div>
             </div>
         </div>
 
@@ -85,9 +85,9 @@
 
         <div class="filter-tabs">
             <div class="tab active" onclick="setFilter('ALL', this)">SEMUA</div>
-            <div class="tab" onclick="setFilter('BELUM', this)">BELUM</div>
-            <div class="tab" onclick="setFilter('UPLOAD G2G', this)">G2G</div>
-            <div class="tab" onclick="setFilter('LAKU', this)">LAKU</div>
+            <div class="tab" onclick="setFilter('STOK', this)">STOK</div>
+            <div class="tab" onclick="setFilter('G2G', this)">G2G</div>
+            <div class="tab" onclick="setFilter('SOLD', this)">SOLD</div>
             <div class="tab" onclick="setFilter('DISABLE', this)" style="color:var(--danger)">DISABLE</div>
         </div>
 
@@ -95,8 +95,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center"><label style="font-weight:bold"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label><span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span></div>
             <div class="sel-actions">
                 <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy Data</button>
-                <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('UPLOAD G2G')">Mark G2G</button>
-                <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('LAKU')">Mark LAKU</button>
+                <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">Mark G2G</button>
+                <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Mark SOLD</button>
                 <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkUpdateStatus('DISABLE')">Mark DISABLE</button>
             </div>
         </div>
@@ -142,8 +142,9 @@
             accounts = [];
             snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
             document.getElementById('countTotal').innerText = accounts.length;
-            document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'BELUM').length;
-            document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'UPLOAD G2G').length;
+            document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'STOK').length;
+            document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'G2G').length;
+            document.getElementById('countSold').innerText = accounts.filter(a => a.status === 'SOLD').length;
             document.getElementById('countDisable').innerText = accounts.filter(a => a.status === 'DISABLE').length;
             render();
         });
@@ -157,7 +158,7 @@
         if (!name || !key) return alert("Isi data!");
         if (accounts.some(acc => acc.name.toLowerCase() === name.toLowerCase())) return alert("Email sudah ada!");
         const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-        db.ref('users/' + userUid).push({ name, key, status: 'BELUM', date });
+        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date });
         nIn.value = ''; kIn.value = '';
     }
 
@@ -172,8 +173,8 @@
         div.innerHTML = '';
         filtered.forEach(acc => {
             let sClass = 'status-pending';
-            if (acc.status === 'UPLOAD G2G') sClass = 'status-uploaded';
-            if (acc.status === 'LAKU') sClass = 'status-sold';
+            if (acc.status === 'G2G') sClass = 'status-uploaded';
+            if (acc.status === 'SOLD') sClass = 'status-sold';
             if (acc.status === 'DISABLE') sClass = 'status-disable';
 
             div.innerHTML += `
@@ -183,7 +184,7 @@
                         <span style="font-size:8px; color:var(--gray); display:block; margin-bottom:4px">${acc.date || ''}</span>
                         <div style="display:flex; justify-content:space-between">
                             <div><span class="email-display">${acc.name}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
-                            <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'BELUM'}</button>
+                            <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
                         </div>
                         <div class="otp-box">
                             <div style="display:flex; align-items:center; gap:8px; cursor:pointer" onclick="copyOTP('${acc.id}')">
@@ -203,21 +204,15 @@
     }
 
     function cycleStatus(id, current) {
-        let next = 'BELUM';
-        if (current === 'BELUM') next = 'UPLOAD G2G';
-        else if (current === 'UPLOAD G2G') next = 'LAKU';
-        else if (current === 'LAKU') next = 'DISABLE';
+        let next = 'STOK';
+        if (current === 'STOK') next = 'G2G';
+        else if (current === 'G2G') next = 'SOLD';
+        else if (current === 'SOLD') next = 'DISABLE';
         db.ref(`users/${userUid}/${id}`).update({ status: next });
     }
 
-    function bulkUpdateStatus(s) { 
-        document.querySelectorAll('.acc-item').forEach(item => { 
-            if (item.querySelector('.acc-check').checked) {
-                db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); 
-            }
-        }); 
-    }
-
+    function bulkUpdateStatus(s) { document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); }); }
+    
     function bulkCopy() {
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
