@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v25.0</title>
+    <title>2FA Pro Cloud v25.1</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -21,10 +21,10 @@
         .pw-quick-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 8px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
         .selection-bar { display: none; background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid var(--primary); margin-bottom: 15px; flex-direction: column; }
-        .btn-bulk { border: none; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; }
+        .btn-bulk { border: none; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; padding: 8px; }
 
-        .filter-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .tab { flex: 1; min-width: 65px; padding: 8px 2px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
+        .filter-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .tab { flex: 0 0 auto; min-width: 65px; padding: 8px 5px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 9px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
         .card-form { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
@@ -89,7 +89,7 @@
             <div class="tab" onclick="setFilter('STOK', this)">STOK</div>
             <div class="tab" onclick="setFilter('G2G', this)">G2G</div>
             <div class="tab" onclick="setFilter('SOLD', this)">SOLD</div>
-            <div class="tab" onclick="setFilter('DISABLE', this)" style="color:var(--danger)">DISABLE</div>
+            <div class="tab" onclick="setFilter('DISABLE', this)" style="border-color: var(--danger); color: var(--danger);">DISABLE</div>
         </div>
 
         <div class="selection-bar" id="selectionBar">
@@ -97,12 +97,12 @@
                 <label style="font-weight:bold; font-size:12px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
                 <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                <button class="btn-bulk" style="background:var(--primary); color:white; padding: 8px;" onclick="bulkCopy()">Copy</button>
-                <button class="btn-bulk" style="background:var(--orange); color:black; padding: 8px;" onclick="bulkUpdateStatus('STOK')">Stok</button>
-                <button class="btn-bulk" style="background:var(--success); color:black; padding: 8px;" onclick="bulkUpdateStatus('G2G')">G2G</button>
-                <button class="btn-bulk" style="background:var(--purple); color:white; padding: 8px;" onclick="bulkUpdateStatus('SOLD')">Sold</button>
-                <button class="btn-bulk" style="background:var(--danger); color:white; padding: 8px; grid-column: span 2;" onclick="bulkDelete()">Hapus Terpilih</button>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+                <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Copy</button>
+                <button class="btn-bulk" style="background:var(--orange); color:black" onclick="bulkUpdateStatus('STOK')">Stok</button>
+                <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdateStatus('G2G')">G2G</button>
+                <button class="btn-bulk" style="background:var(--purple); color:white" onclick="bulkUpdateStatus('SOLD')">Sold</button>
+                <button id="btnBulkDelete" class="btn-bulk" style="background:var(--danger); color:white; grid-column: span 4; display: none;" onclick="bulkDelete()">Hapus Terpilih</button>
             </div>
         </div>
 
@@ -219,6 +219,7 @@
                     </div>
                 </div>`;
         });
+        updateSelCount();
     }
 
     function cycleStatus(id, current) {
@@ -252,7 +253,14 @@
     }
 
     function toggleSelectAll() { const isChecked = document.getElementById('selectAll').checked; document.querySelectorAll('.acc-check').forEach(c => c.checked = isChecked); updateSelCount(); }
-    function updateSelCount() { document.getElementById('selCount').innerText = document.querySelectorAll('.acc-check:checked').length + " selected"; }
+    
+    function updateSelCount() { 
+        const count = document.querySelectorAll('.acc-check:checked').length;
+        document.getElementById('selCount').innerText = count + " selected"; 
+        // Hanya tampilkan tombol hapus massal jika lebih dari 5 yang dipilih
+        document.getElementById('btnBulkDelete').style.display = (count > 5) ? 'block' : 'none';
+    }
+
     function copyTextQuick(txt, el) { navigator.clipboard.writeText(txt); const label = document.getElementById('pwLabel'); label.innerText = "COPIED!"; label.style.color = "var(--success)"; setTimeout(() => { label.innerText = "KLIK UNTUK SALIN"; label.style.color = "var(--gray)"; }, 1000); }
     function copyText(txt, el, label) { navigator.clipboard.writeText(txt); el.innerText = "OK"; setTimeout(() => el.innerText = label, 800); }
 
