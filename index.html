@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v23.0</title>
+    <title>2FA Pro Cloud v24.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -29,7 +29,8 @@
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
         .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; font-family: inherit; }
+        textarea { height: 60px; resize: none; }
         .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
 
         .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; }
@@ -37,14 +38,17 @@
         .email-display { font-weight: bold; font-size: 14px; display: block; }
         .key-display { font-family: monospace; font-size: 11px; color: var(--gray); display: block; margin-top: 2px; }
         
+        /* Highlight Stabilo */
+        mark { background: #ff4444; color: white; padding: 0 2px; border-radius: 2px; }
+
         .status-badge { font-size: 8px; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-weight: 900; border: none; }
         .status-uploaded { background: var(--success); color: #000; }
         .status-pending { background: var(--orange); color: #000; }
         .status-sold { background: var(--purple); color: #fff; }
         .status-disable { background: var(--danger); color: #fff; }
 
-        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); }
-        .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); transition: 0.3s; }
+        .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; transition: 0.3s; }
         .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; }
         #main-app, #login-screen { display: none; }
     </style>
@@ -101,7 +105,7 @@
             </div>
         </div>
 
-        <input type="text" id="searchInput" placeholder="Cari email atau key..." oninput="render()" style="background:var(--card); margin-bottom:15px">
+        <textarea id="searchInput" placeholder="Cari email (bisa banyak baris)..." oninput="render()"></textarea>
         <div id="displayList"></div>
     </div>
 </div>
@@ -150,6 +154,16 @@
         });
     }
 
+    function highlightText(text, terms) {
+        if (!terms || terms.length === 0) return text;
+        let highlighted = text;
+        terms.forEach(term => {
+            const regex = new RegExp(`(${term})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+        });
+        return highlighted;
+    }
+
     function addSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
 
     function saveAccount() {
@@ -164,10 +178,20 @@
 
     function render() {
         const div = document.getElementById('displayList');
-        const search = document.getElementById('searchInput').value.toLowerCase().replace(/\s/g, '');
+        const searchRaw = document.getElementById('searchInput').value.trim().toLowerCase();
+        const searchTerms = searchRaw.split(/[\n\s,]+/).filter(t => t !== "");
+        
         let filtered = [...accounts].reverse();
         if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
-        filtered = filtered.filter(a => a.name.toLowerCase().includes(search) || a.key.toLowerCase().includes(search));
+        
+        if (searchTerms.length > 0) {
+            filtered = filtered.filter(acc => {
+                return searchTerms.some(term => 
+                    acc.name.toLowerCase().includes(term) || 
+                    acc.key.toLowerCase().includes(term.replace(/\s/g, ''))
+                );
+            });
+        }
         
         document.getElementById('selectionBar').style.display = filtered.length > 0 ? 'flex' : 'none';
         div.innerHTML = '';
@@ -183,15 +207,15 @@
                     <div style="flex-grow:1">
                         <span style="font-size:8px; color:var(--gray); display:block; margin-bottom:4px">${acc.date || ''}</span>
                         <div style="display:flex; justify-content:space-between">
-                            <div><span class="email-display">${acc.name}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
+                            <div><span class="email-display">${highlightText(acc.name, searchTerms)}</span><span class="key-display">${addSpaces(acc.key)}</span></div>
                             <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
                         </div>
-                        <div class="otp-box">
+                        <div class="otp-box" id="box-${acc.id}">
                             <div style="display:flex; align-items:center; gap:8px; cursor:pointer" onclick="copyOTP('${acc.id}')">
                                 <span style="font-size:8px; color:var(--gray)" id="t-${acc.id}">30s</span>
                                 <div class="otp-num" id="otp-${acc.id}">------</div>
                             </div>
-                            <button class="btn-action-small" style="background:var(--primary)" onclick="copyOTP('${acc.id}', this)">COPY OTP</button>
+                            <button class="btn-action-small" id="btn-${acc.id}" style="background:var(--primary)" onclick="copyOTP('${acc.id}')">COPY OTP</button>
                         </div>
                         <div style="display:flex; gap:10px">
                             <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
@@ -212,7 +236,6 @@
     }
 
     function bulkUpdateStatus(s) { document.querySelectorAll('.acc-item').forEach(item => { if (item.querySelector('.acc-check').checked) db.ref(`users/${userUid}/${item.getAttribute('data-id')}`).update({ status: s }); }); }
-    
     function bulkCopy() {
         let text = "";
         document.querySelectorAll('.acc-item').forEach(item => {
@@ -236,10 +259,7 @@
         const label = document.getElementById('pwLabel');
         label.innerText = "COPIED!";
         label.style.color = "var(--success)";
-        setTimeout(() => {
-            label.innerText = "KLIK UNTUK SALIN";
-            label.style.color = "var(--gray)";
-        }, 1000);
+        setTimeout(() => { label.innerText = "KLIK UNTUK SALIN"; label.style.color = "var(--gray)"; }, 1000);
     }
 
     function copyText(txt, el, label) {
@@ -249,7 +269,31 @@
         setTimeout(() => el.innerText = label, 800);
     }
 
-    function copyOTP(id, btn) { navigator.clipboard.writeText(document.getElementById('otp-' + id).innerText); if(btn) { btn.innerText = 'DONE'; setTimeout(() => btn.innerText = 'COPY OTP', 800); } }
+    function copyOTP(id) {
+        const otpText = document.getElementById('otp-' + id).innerText;
+        navigator.clipboard.writeText(otpText);
+        
+        const numEl = document.getElementById('otp-' + id);
+        const btnEl = document.getElementById('btn-' + id);
+        const boxEl = document.getElementById('box-' + id);
+
+        // Ubah jadi Hijau
+        numEl.style.color = "var(--success)";
+        btnEl.innerText = "DONE";
+        btnEl.style.background = "var(--success)";
+        btnEl.style.color = "black";
+        boxEl.style.borderColor = "var(--success)";
+
+        // Balikin ke Biru setelah 1 detik
+        setTimeout(() => {
+            numEl.style.color = "var(--primary)";
+            btnEl.innerText = "COPY OTP";
+            btnEl.style.background = "var(--primary)";
+            btnEl.style.color = "white";
+            boxEl.style.borderColor = "var(--border)";
+        }, 1000);
+    }
+
     function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
     function updateCodes() {
         const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
