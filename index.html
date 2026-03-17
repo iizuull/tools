@@ -3,101 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Authenticator Pro Cloud</title>
+    <title>2FA Pro - G2G Filter</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.2/otpauth.umd.min.js"></script>
     <style>
         :root { 
-            --primary: #2563eb; --bg: #000000; --card: #121212; --border: #333; 
-            --text: #ffffff; --gray: #888; --danger: #ef4444; --success: #22c55e;
+            --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; 
+            --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; transition: 0.3s; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .wrapper { width: 100%; max-width: 480px; }
-        
-        /* Login Screen */
         .login-screen { text-align: center; margin-top: 100px; padding: 30px; background: var(--card); border-radius: 16px; border: 1px solid var(--border); }
-        .btn-google { background: #ffffff; color: #000; padding: 14px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 14px; }
+        .btn-google { background: #fff; color: #000; padding: 14px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        .header { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .stock-info { font-size: 11px; color: var(--gray); display: flex; gap: 8px; margin-top: 8px; }
+        .badge-info { padding: 4px 8px; border-radius: 6px; background: #1a1a1a; border: 1px solid var(--border); }
+        
+        /* Filter Tabs */
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 11px; font-weight: bold; text-align: center; text-transform: uppercase; transition: 0.2s; }
+        .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* App UI */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .top-action-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; gap: 10px; }
-        .btn-top { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        
-        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 14px; box-sizing: border-box; }
-        .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; }
-        .btn-save { width: 100%; padding: 14px; background: var(--text); color: var(--bg); border: none; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; }
-        
-        .selection-bar { display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13px; background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        .counter-badge { font-size: 11px; color: var(--gray); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 10px; }
+        .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
+        .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; }
 
-        .acc-item { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; gap: 12px; position: relative; }
-        .content-area { flex-grow: 1; overflow: hidden; }
-        .acc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
-        .acc-name { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
-        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.05); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .otp-left { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .acc-item { background: var(--card); padding: 18px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; position: relative; }
+        .status-btn { font-size: 9px; font-weight: 900; padding: 5px 10px; border-radius: 5px; cursor: pointer; border: none; }
+        .status-uploaded { background: var(--success); color: #000; }
+        .status-pending { background: var(--orange); color: #000; }
+
+        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 12px; border-radius: 8px; margin: 12px 0; border: 1px solid var(--border); }
         .otp-num { font-family: monospace; font-size: 28px; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
-        
-        .timer-container { position: relative; width: 24px; height: 24px; }
+        .timer-container { position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+        .timer-text { font-size: 9px; font-weight: bold; color: var(--gray); position: absolute; }
         .timer-svg { transform: rotate(-90deg); width: 24px; height: 24px; }
         .timer-circle-bg { fill: none; stroke: var(--border); stroke-width: 3; }
-        .timer-circle-prog { fill: none; stroke: var(--primary); stroke-width: 3; stroke-dasharray: 70; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
-        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8px; font-weight: bold; color: var(--gray); }
+        .timer-circle-prog { fill: none; stroke: var(--primary); stroke-width: 3; stroke-dasharray: 70; }
 
-        .btn-copy-main { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: background 0.2s; }
-        .btn-copy-main.copied { background: var(--success); color: #000; }
-
-        .btn-action-small { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-        .item-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--gray); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
-        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
-        
+        .btn-action { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-copy-main { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
         #main-app { display: none; }
     </style>
 </head>
 <body>
 <div class="wrapper">
     <div id="login-screen" class="login-screen">
-        <h2 style="margin:0">2FA Authenticator</h2>
-        <p style="color:var(--gray); font-size: 13px; margin-top: 10px;">Cloud Database Locked</p>
+        <h2>2FA AUTH CLOUD</h2>
         <button class="btn-google" onclick="login()">SIGN IN WITH GOOGLE</button>
     </div>
 
     <div id="main-app">
         <div class="header">
-            <div>
-                <h3 style="margin:0">2FA Authenticator</h3>
-                <span id="accCounter" class="counter-badge">0 Accounts</span>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h3 style="margin:0">Stock Manager</h3>
+                <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
             </div>
-            <button class="btn-top" style="color:var(--danger); border:none;" onclick="logout()">Logout</button>
+            <div class="stock-info">
+                <span class="badge-info">TOTAL: <b id="countTotal">0</b></span>
+                <span class="badge-info" style="color:var(--success)">G2G: <b id="countG2G">0</b></span>
+                <span class="badge-info" style="color:var(--orange)">BELUM: <b id="countBelum">0</b></span>
+            </div>
         </div>
-
-        <div class="top-action-bar">
-            <button id="btnCopySelected" class="btn-top" style="background:var(--primary); color:white; display:none;" onclick="copySelectedData()">Copy Data</button>
-        </div>
-
-        <input type="text" id="searchInput" placeholder="Search accounts..." oninput="render()">
 
         <div class="card-form">
-            <input type="text" id="accName" placeholder="Account Name / Email" autocomplete="off">
-            <input type="text" id="accKey" placeholder="Secret Key" autocomplete="off">
-            <textarea id="accBackup" placeholder="Notes / Backup Codes" rows="2"></textarea>
-            <button class="btn-save" onclick="saveAccount()">Save Account</button>
+            <input type="text" id="accName" placeholder="Email / Akun" autocomplete="off">
+            <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.replace(/\s/g, '').toUpperCase()" autocomplete="off">
+            <button class="btn-save" onclick="saveAccount()">Save to Cloud</button>
         </div>
 
-        <div class="selection-bar" id="selectionBar">
-            <label style="cursor:pointer"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
-            <button class="btn-top" style="color:var(--danger); border:none" onclick="deleteSelected()">Delete Selected</button>
+        <div class="filter-tabs">
+            <div class="tab active" onclick="setFilter('ALL', this)">Semua</div>
+            <div class="tab" onclick="setFilter('UPLOAD G2G', this)">G2G</div>
+            <div class="tab" onclick="setFilter('BELUM', this)">Belum</div>
         </div>
+
+        <input type="text" id="searchInput" placeholder="Search accounts..." oninput="render()" style="background:var(--card); margin-bottom:15px">
 
         <div id="displayList"></div>
     </div>
 </div>
 
 <script>
-    // Konfigurasi Project FANEWS
     const firebaseConfig = {
         apiKey: "AIzaSyC3mIXsaFlLbpKm5qufpP6Trr9S1DXixKk",
         authDomain: "fanews-b8b0f.firebaseapp.com",
@@ -105,17 +94,14 @@
         projectId: "fanews-b8b0f",
         storageBucket: "fanews-b8b0f.firebasestorage.app",
         messagingSenderId: "514202109743",
-        appId: "1:514202109743:web:ef7f55adfaed815bbc43da",
-        measurementId: "G-FG1F0E35N6"
+        appId: "1:514202109743:web:ef7f55adfaed815bbc43da"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    let userUid = null;
-    let accounts = [];
+    let userUid = null, accounts = [], currentFilter = 'ALL';
 
-    // --- Authentication ---
     auth.onAuthStateChanged(user => {
         if (user) {
             userUid = user.uid;
@@ -128,105 +114,83 @@
         }
     });
 
-    function login() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider);
-    }
+    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { if(confirm("Logout?")) auth.signOut(); }
 
-    // --- Data Cloud ---
     function loadData() {
         db.ref('users/' + userUid).on('value', snapshot => {
             accounts = [];
-            snapshot.forEach(child => {
-                accounts.push({ id: child.key, ...child.val() });
-            });
+            snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
+            updateCounters();
             render();
         });
     }
 
+    function updateCounters() {
+        const total = accounts.length;
+        const g2g = accounts.filter(a => a.status === 'UPLOAD G2G').length;
+        document.getElementById('countTotal').innerText = total;
+        document.getElementById('countG2G').innerText = g2g;
+        document.getElementById('countBelum').innerText = total - g2g;
+    }
+
+    function setFilter(f, el) {
+        currentFilter = f;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        render();
+    }
+
     function saveAccount() {
-        const nameInput = document.getElementById('accName');
-        const keyInput = document.getElementById('accKey');
-        const backupInput = document.getElementById('accBackup');
-        const name = nameInput.value.trim();
-        const keyRaw = keyInput.value.replace(/\s/g, '').toUpperCase();
-        
-        if (accounts.some(acc => acc.name.toLowerCase() === name.toLowerCase())) {
-            alert("⚠️ Email '" + name + "' sudah ada.");
-            return;
-        }
-
-        if (name && keyRaw) {
-            db.ref('users/' + userUid).push({ name, key: keyRaw, backup: backupInput.value });
-            nameInput.value = ''; keyInput.value = ''; backupInput.value = '';
+        const name = document.getElementById('accName').value.trim();
+        const key = document.getElementById('accKey').value.trim();
+        if (name && key) {
+            db.ref('users/' + userUid).push({ name, key, status: 'BELUM' });
+            document.getElementById('accName').value = ''; document.getElementById('accKey').value = '';
         }
     }
 
-    // --- UI & Rendering ---
-    function formatKeyWithSpaces(str) { return str ? str.match(/.{1,4}/g).join(' ') : ''; }
-
-    function toggleSelectAll() {
-        document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked);
-        updateUI();
-    }
-
-    function updateUI() {
-        const selected = document.querySelectorAll('.acc-check:checked').length;
-        document.getElementById('btnCopySelected').style.display = selected > 0 ? 'inline-block' : 'none';
-    }
-
-    function copySelectedData() {
-        let textToCopy = "";
-        const checks = document.querySelectorAll('.acc-check');
-        const items = [...document.querySelectorAll('.acc-item')];
-        items.forEach((item, i) => {
-            if (checks[i].checked) {
-                textToCopy += `${item.querySelector('.acc-name').innerText}\n${item.querySelector('.secret-val').innerText.replace(/\s/g, '')}\n\n`;
-            }
-        });
-        navigator.clipboard.writeText(textToCopy.trim());
-        const btn = document.getElementById('btnCopySelected');
-        btn.innerText = 'COPIED!';
-        setTimeout(() => btn.innerText = 'Copy Data', 1000);
+    function toggleStatus(id, current) {
+        const next = current === 'UPLOAD G2G' ? 'BELUM' : 'UPLOAD G2G';
+        db.ref('users/' + userUid + '/' + id).update({ status: next });
     }
 
     function render() {
         const div = document.getElementById('displayList');
         const search = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = [...accounts].reverse().filter(a => a.name.toLowerCase().includes(search));
         
-        document.getElementById('accCounter').innerText = `${accounts.length} Accounts`;
-        document.getElementById('selectionBar').style.display = filtered.length > 0 ? 'flex' : 'none';
+        let filtered = [...accounts].reverse();
+        if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
+        filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
+        
         div.innerHTML = '';
-
-        filtered.forEach((acc) => {
-            const formatted = formatKeyWithSpaces(acc.key);
+        filtered.forEach(acc => {
+            const isG2G = acc.status === 'UPLOAD G2G';
             div.innerHTML += `
                 <div class="acc-item">
-                    <input type="checkbox" class="acc-check" onclick="updateUI()">
-                    <div class="content-area">
-                        <div class="acc-header">
-                            <span class="acc-name">${acc.name}</span>
-                            <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">Mail</button>
-                        </div>
-                        <div class="secret-row">
-                            <code class="secret-val" style="font-size:9px; color:var(--gray)">${formatted}</code>
-                            <button class="btn-action-small" onclick="copyText('${formatted}', this, 'KEY')">Key</button>
-                        </div>
-                        <div class="otp-box">
-                            <div class="otp-left" onclick="copyOTP('${acc.id}', null)">
-                                <div class="timer-container">
-                                    <svg class="timer-svg"><circle class="timer-circle-bg" cx="12" cy="12" r="11"/><circle class="timer-circle-prog" id="circle-${acc.id}" cx="12" cy="12" r="11" style="stroke-dasharray: 70;"/></svg>
-                                    <div class="timer-text" id="t-${acc.id}">30</div>
-                                </div>
-                                <div class="otp-num" id="otp-${acc.id}">------</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+                        <span style="font-weight:bold; font-size:14px">${acc.name}</span>
+                        <button class="status-btn ${isG2G ? 'status-uploaded' : 'status-pending'}" 
+                                onclick="toggleStatus('${acc.id}', '${acc.status}')">
+                                ${acc.status}
+                        </button>
+                    </div>
+                    <div class="otp-box">
+                        <div style="display:flex; align-items:center; gap:10px; cursor:pointer" onclick="copyOTP('${acc.id}', null)">
+                            <div class="timer-container">
+                                <svg class="timer-svg"><circle class="timer-circle-bg" cx="12" cy="12" r="11"/><circle class="timer-circle-prog" id="circle-${acc.id}" cx="12" cy="12" r="11"/></svg>
+                                <div class="timer-text" id="t-${acc.id}">30</div>
                             </div>
-                            <button class="btn-copy-main" id="btn-otp-${acc.id}" onclick="copyOTP('${acc.id}', this)">COPY</button>
+                            <div class="otp-num" id="otp-${acc.id}">------</div>
                         </div>
-                        <div class="item-footer">
-                            <button class="btn-link" style="background:none; border:none; color:var(--danger); cursor:pointer; text-decoration:underline; font-size:10px;" onclick="deleteSingle('${acc.id}')">Delete Account</button>
+                        <button class="btn-copy-main" id="btn-otp-${acc.id}" onclick="copyOTP('${acc.id}', this)">COPY</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between">
+                        <div>
+                            <button class="btn-action" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
+                            <button class="btn-action" onclick="copyText('${acc.key}', this, 'KEY')">KEY</button>
                         </div>
+                        <button onclick="del('${acc.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">Hapus</button>
                     </div>
                 </div>`;
         });
@@ -238,8 +202,8 @@
         accounts.forEach(acc => {
             try {
                 let totp = new OTPAuth.TOTP({ secret: acc.key });
-                const otpEl = document.getElementById('otp-' + acc.id);
-                if(otpEl) otpEl.innerText = totp.generate();
+                const el = document.getElementById('otp-' + acc.id);
+                if(el) el.innerText = totp.generate();
                 const circ = document.getElementById('circle-' + acc.id);
                 if(circ) circ.style.strokeDashoffset = 70 - offset;
                 const txt = document.getElementById('t-' + acc.id);
@@ -251,8 +215,7 @@
     function copyText(txt, btn, label) {
         navigator.clipboard.writeText(txt);
         btn.innerText = 'OK';
-        btn.style.color = 'var(--success)';
-        setTimeout(() => { btn.innerText = label; btn.style.color = 'var(--text)'; }, 800);
+        setTimeout(() => btn.innerText = label, 800);
     }
 
     function copyOTP(id, btn) {
@@ -260,24 +223,10 @@
         navigator.clipboard.writeText(text);
         const targetBtn = btn || document.getElementById('btn-otp-' + id);
         targetBtn.innerText = 'DONE';
-        targetBtn.classList.add('copied');
-        setTimeout(() => { targetBtn.innerText = 'COPY'; targetBtn.classList.remove('copied'); }, 800);
+        setTimeout(() => targetBtn.innerText = 'COPY', 800);
     }
 
-    function deleteSingle(id) { if(confirm("Hapus akun?")) db.ref('users/' + userUid + '/' + id).remove(); }
-    function deleteSelected() {
-        if(confirm("Hapus akun yang dipilih?")) {
-            const checks = document.querySelectorAll('.acc-check');
-            const items = [...document.querySelectorAll('.acc-item')];
-            items.forEach((item, i) => {
-                if (checks[i].checked) {
-                    const id = item.querySelector('.otp-num').id.replace('otp-', '');
-                    db.ref('users/' + userUid + '/' + id).remove();
-                }
-            });
-        }
-    }
-
+    function del(id) { if(confirm("Hapus?")) db.ref('users/' + userUid + '/' + id).remove(); }
     setInterval(updateCodes, 1000);
 </script>
 </body>
