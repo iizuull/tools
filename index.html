@@ -3,42 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin 2FA - izuul.my.id</title>
+    <title>Admin 2FA v40.0 - Izuul</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.2/otpauth.umd.min.js"></script>
     <style>
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --cyan: #06b6d4; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; display: flex; justify-content: center; }
-        .wrapper { width: 100%; max-width: 500px; padding-bottom: 120px; }
+        .wrapper { width: 100%; max-width: 500px; padding-bottom: 150px; }
+        
         .header { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
         .stat-box { background: #1a1a1a; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
         .stat-box small { font-size: 8px; color: var(--gray); display: block; }
         .stat-box b { font-size: 11px; }
+
         .master-pw-bar { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--orange); padding: 10px; border-radius: 10px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .search-container { position: sticky; top: 0; background: var(--bg); z-index: 100; padding: 10px 0; }
-        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: #111; color: white; box-sizing: border-box; outline: none; }
-        .tab-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-top: 10px; scrollbar-width: none; }
+
+        /* FORM */
+        .card-form { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
+        .btn-save { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; }
+
+        /* LIST & CARDS */
+        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: #111; color: white; box-sizing: border-box; margin-bottom: 10px; }
+        .tab-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
         .tab { flex: 0 0 auto; padding: 8px 12px; border-radius: 8px; background: #111; border: 1px solid #333; font-size: 10px; cursor: pointer; color: var(--gray); }
-        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .selection-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 460px; background: #1a1a1a; padding: 15px; border-radius: 15px; border: 2px solid var(--primary); display: none; flex-direction: column; gap: 10px; z-index: 1000; box-shadow: 0 10px 30px #000; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .otp-box { background: rgba(37,99,235,0.05); padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .otp-num { font-size: 30px; font-weight: 900; color: var(--primary); letter-spacing: 2px; font-family: monospace; }
+        
+        /* FLOATING BAR */
+        .selection-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 460px; background: #1a1a1a; padding: 15px; border-radius: 15px; border: 2px solid var(--primary); display: none; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px #000; z-index: 1000; }
         .grid-bulk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-bulk { padding: 10px; border: none; border-radius: 8px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-        .card-form { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; }
-        .acc-item { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; display: flex; gap: 12px; }
-        .acc-item.selected { border-color: var(--primary); background: rgba(37, 99, 235, 0.05); }
-        .acc-check { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
-        .otp-box { background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #222; text-align: center; }
-        .otp-num { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: 2px; font-family: monospace; }
-        .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; }
+
+        .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
     <div class="header">
-        <h3 style="margin:0">Izuul Admin Dashboard</h3>
+        <h3 style="margin:0">Admin Dashboard</h3>
         <div class="master-pw-bar" onclick="copyText('sayamanusia')">
             <div><small style="display:block; font-size:8px; color:var(--gray)">MASTER PASSWORD</small><b style="color:var(--orange)">sayamanusia</b></div>
             <span style="font-size:9px; color:var(--gray)">SALIN</span>
@@ -52,30 +61,29 @@
     </div>
 
     <div class="card-form">
-        <input type="text" id="accName" placeholder="Email / Username">
-        <input type="text" id="accKey" placeholder="2FA Secret Key" oninput="this.value = this.value.toUpperCase().replace(/\s/g,'')">
-        <button onclick="saveAccount()" style="width:100%; padding:15px; background:white; color:black; border:none; border-radius:8px; font-weight:900; cursor:pointer;">TAMBAH KE FIREBASE</button>
+        <input type="text" id="accName" placeholder="Email / Username" autocomplete="off">
+        <input type="text" id="accKey" placeholder="Secret Key" autocomplete="off" oninput="this.value = this.value.toUpperCase().replace(/\s/g,'')">
+        <button class="btn-save" onclick="saveAccount()">SIMPAN KE FIREBASE</button>
     </div>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Cari email atau client..." oninput="render()">
-        <div class="tab-scroll">
-            <div class="tab active" onclick="setFilter('ALL', this)">SEMUA</div>
-            <div class="tab" onclick="setFilter('STOK', this)">STOK</div>
-            <div class="tab" onclick="setFilter('G2G', this)">G2G</div>
-            <div class="tab" onclick="setFilter('CLIENT', this)">CLIENT</div>
-            <div class="tab" onclick="setFilter('SOLD', this)">SOLD</div>
-            <div class="tab" onclick="setFilter('DISABLE', this)">TRASH</div>
-        </div>
+    <input type="text" id="searchInput" class="search-input" placeholder="Cari email..." oninput="render()">
+    
+    <div class="tab-scroll">
+        <div class="tab active" onclick="setFilter('ALL', this)">SEMUA</div>
+        <div class="tab" onclick="setFilter('STOK', this)">STOK</div>
+        <div class="tab" onclick="setFilter('G2G', this)">G2G</div>
+        <div class="tab" onclick="setFilter('CLIENT', this)">CLIENT</div>
+        <div class="tab" onclick="setFilter('SOLD', this)">SOLD</div>
+        <div class="tab" onclick="setFilter('DISABLE', this)">TRASH</div>
     </div>
 
     <div id="displayList"></div>
 </div>
 
 <div class="selection-bar" id="selectionBar">
-    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px">
+    <div style="display:flex; justify-content:space-between; font-size:12px">
         <label><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Pilih Semua</label>
-        <span id="selCount">0 selected</span>
+        <span id="selCount">0 dipilih</span>
     </div>
     <div class="grid-bulk">
         <button class="btn-bulk" style="background:var(--orange); color:black" onclick="bulkUpdate('STOK')">Stok</button>
@@ -84,7 +92,7 @@
         <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">Salin</button>
         <button class="btn-bulk" style="background:white; color:black" onclick="copyClientLink()">Get Link</button>
         <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkUpdate('DISABLE')">Buang</button>
-        <button id="btnBulkDel" class="btn-bulk" style="background:#444; color:white; display:none; grid-column: span 3;" onclick="bulkDelete()">HAPUS PERMANEN</button>
+        <button id="btnBulkDel" class="btn-bulk" style="background:#444; color:white; display:none; grid-column: span 3" onclick="bulkDelete()">HAPUS PERMANEN</button>
     </div>
 </div>
 
@@ -118,11 +126,21 @@
     }
 
     function saveAccount() {
-        const name = document.getElementById('accName').value.trim(), key = document.getElementById('accKey').value;
-        if(!name || !key) return alert("Isi data!");
+        const nameEl = document.getElementById('accName');
+        const keyEl = document.getElementById('accKey');
+        const name = nameEl.value.trim();
+        const key = keyEl.value.trim();
+
+        if(!name || !key) return alert("Email & Key wajib diisi!");
+        
         const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
-        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date });
-        document.getElementById('accName').value=''; document.getElementById('accKey').value='';
+        
+        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date }).then(() => {
+            // RIWAYAT INPUT DIHAPUS SETELAH SIMPAN
+            nameEl.value = "";
+            keyEl.value = "";
+            alert("Berhasil disimpan!");
+        });
     }
 
     function render() {
@@ -130,32 +148,35 @@
         const search = document.getElementById('searchInput').value.toLowerCase();
         let filtered = [...accounts].reverse();
         if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
-        if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search) || (a.owner && a.owner.toLowerCase().includes(search)));
+        if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
         
         div.innerHTML = '';
         filtered.forEach(acc => {
             div.innerHTML += `
                 <div class="acc-item" id="item-${acc.id}">
-                    <input type="checkbox" class="acc-check" data-id="${acc.id}" onclick="updateUI()">
-                    <div style="flex-grow:1">
-                        <div style="display:flex; justify-content:space-between; align-items:center">
-                            <small style="color:var(--gray); font-size:9px">${acc.date || ''} ${acc.owner ? '• '+acc.owner : ''}</small>
-                            <b style="font-size:9px; color:var(--primary)">${acc.status}</b>
-                        </div>
-                        <b style="display:block; margin:4px 0">${acc.name}</b>
-                        <div class="otp-box">
-                            <div class="otp-num" id="otp-${acc.id}">------</div>
-                            <small id="t-${acc.id}" style="color:var(--gray)">30s</small>
-                        </div>
-                        <div style="display:flex; gap:10px">
-                            <button class="btn-action-small" onclick="copyText('${acc.name}')">MAIL</button>
-                            <button class="btn-action-small" onclick="copyText('${acc.key}')">KEY</button>
-                            <button class="btn-action-small" style="background:var(--primary)" onclick="copyG2G('${acc.name}', '${acc.id}')">G2G</button>
-                        </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <input type="checkbox" class="acc-check" data-id="${acc.id}" onclick="updateUI()">
+                        <small style="color:var(--gray); font-size:9px">${acc.date || ''} ${acc.owner ? '• '+acc.owner : ''}</small>
+                        <b style="font-size:9px; color:var(--primary)" onclick="cycleStatus('${acc.id}','${acc.status}')">${acc.status}</b>
+                    </div>
+                    <b>${acc.name}</b>
+                    <div class="otp-box">
+                        <div class="otp-num" id="otp-${acc.id}">------</div>
+                        <button class="btn-action-small" onclick="copyOTP('${acc.id}')">COPY OTP</button>
+                    </div>
+                    <div style="display:flex; gap:8px">
+                        <button class="btn-action-small" onclick="copyText('${acc.name}')">MAIL</button>
+                        <button class="btn-action-small" onclick="copyText('${acc.key}')">KEY</button>
+                        <button class="btn-action-small" style="background:var(--primary)" onclick="copyG2G('${acc.name}','${acc.id}')">G2G READY</button>
                     </div>
                 </div>`;
         });
-        updateUI();
+    }
+
+    function copyOTP(id) {
+        const code = document.getElementById('otp-'+id).innerText;
+        navigator.clipboard.writeText(code);
+        alert("OTP Copied: " + code);
     }
 
     function updateUI() {
@@ -163,67 +184,58 @@
         document.getElementById('selectionBar').style.display = checked.length > 0 ? 'flex' : 'none';
         document.getElementById('selCount').innerText = checked.length + " selected";
         document.getElementById('btnBulkDel').style.display = (checked.length > 0 && currentFilter === 'DISABLE') ? 'grid' : 'none';
-        document.querySelectorAll('.acc-item').forEach(el => el.classList.remove('selected'));
-        checked.forEach(c => document.getElementById('item-' + c.dataset.id).classList.add('selected'));
     }
 
     function toggleSelectAll() {
-        const master = document.getElementById('selectAll').checked;
-        document.querySelectorAll('.acc-check').forEach(c => c.checked = master);
+        document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked);
         updateUI();
     }
 
     function bulkUpdate(s) {
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            db.ref(`users/${userUid}/${c.dataset.id}`).update({ status: s });
-        });
+        document.querySelectorAll('.acc-check:checked').forEach(c => db.ref(`users/${userUid}/${c.dataset.id}`).update({ status: s }));
     }
 
     function sendToClient() {
-        const name = prompt("Masukkan Nama Client:");
-        if (!name) return;
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            db.ref(`users/${userUid}/${c.dataset.id}`).update({ status: 'CLIENT', owner: name.toLowerCase() });
-        });
-        alert("Sent to " + name);
+        const name = prompt("Nama Client:");
+        if(name) document.querySelectorAll('.acc-check:checked').forEach(c => db.ref(`users/${userUid}/${c.dataset.id}`).update({ status: 'CLIENT', owner: name.toLowerCase() }));
     }
 
     function copyClientLink() {
-        const name = prompt("Masukkan Nama Client untuk Copy Link:");
-        if (!name) return;
-        const link = `https://izuul.my.id/tools/client.html?id=${name.toLowerCase()}`;
-        navigator.clipboard.writeText(link);
-        alert("Link Client copied:\n" + link);
+        const name = prompt("Nama Client untuk Link:");
+        if(name) {
+            const link = `https://izuul.my.id/tools/client.html?id=${name.toLowerCase()}`;
+            navigator.clipboard.writeText(link); alert("Link Copied!");
+        }
     }
 
     function bulkCopy() {
-        let text = "";
+        let txt = "";
         document.querySelectorAll('.acc-check:checked').forEach(c => {
-            const acc = accounts.find(a => a.id === c.dataset.id);
-            text += `${acc.name}|${acc.key}\n`;
+            const a = accounts.find(x => x.id === c.dataset.id);
+            txt += `${a.name}|${a.key}\n`;
         });
-        navigator.clipboard.writeText(text); alert("Data Copied!");
+        navigator.clipboard.writeText(txt); alert("Copied!");
     }
 
     function bulkDelete() {
-        if(!confirm("Hapus permanen dari Trash?")) return;
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            db.ref(`users/${userUid}/${c.dataset.id}`).remove();
-        });
+        if(confirm("Hapus Permanen?")) document.querySelectorAll('.acc-check:checked').forEach(c => db.ref(`users/${userUid}/${c.dataset.id}`).remove());
     }
 
-    function copyText(txt) { navigator.clipboard.writeText(txt); alert("Copied!"); }
-    function copyG2G(email, id) { const otp = document.getElementById('otp-'+id).innerText; navigator.clipboard.writeText(`${email} | sayamanusia | ${otp}`); alert("G2G Copied!"); }
-    function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
+    function copyText(t) { navigator.clipboard.writeText(t); alert("Copied!"); }
+    function copyG2G(e,id) { const o = document.getElementById('otp-'+id).innerText; navigator.clipboard.writeText(`${e} | sayamanusia | ${o}`); alert("G2G Copied!"); }
+    function setFilter(f,el) { currentFilter=f; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); render(); }
+    function cycleStatus(id,cur) {
+        const flow=['STOK','G2G','CLIENT','SOLD','DISABLE'];
+        db.ref(`users/${userUid}/${id}`).update({ status: flow[(flow.indexOf(cur)+1)%flow.length] });
+    }
 
     setInterval(() => {
-        const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
-        accounts.forEach(acc => {
+        const rem = 30 - (Math.floor(Date.now() / 1000) % 30);
+        accounts.forEach(a => {
             try {
-                let totp = new OTPAuth.TOTP({ secret: acc.key });
-                const el = document.getElementById('otp-' + acc.id); if(el) el.innerText = totp.generate();
-                const tEl = document.getElementById('t-' + acc.id); if(tEl) tEl.innerText = remain + "s";
-            } catch (e) {}
+                let t = new OTPAuth.TOTP({ secret: a.key });
+                const el = document.getElementById('otp-'+a.id); if(el) el.innerText = t.generate();
+            } catch(e){}
         });
     }, 1000);
 
