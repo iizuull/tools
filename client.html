@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Access Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.2/otpauth.umd.min.js"></script>
+    <style>
+        :root { --primary: #06b6d4; --bg: #000; --card: #121212; --border: #333; --text: #fff; --success: #22c55e; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; justify-content: center; }
+        .wrapper { width: 100%; max-width: 450px; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .acc-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .acc-item.checked { opacity: 0.3; }
+        .otp-box { background: rgba(6, 182, 212, 0.1); padding: 15px; border-radius: 10px; text-align: center; margin: 10px 0; border: 1px solid #222; }
+        .otp-num { font-size: 35px; font-weight: 800; color: var(--primary); letter-spacing: 3px; }
+        .btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 10px; margin-top: 5px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="header">
+        <h2 style="margin:0; color:var(--primary)">ACCOUNT PANEL</h2>
+        <p style="font-size:10px; color:#666">Live 2FA Codes & Quality Control</p>
+    </div>
+    <div id="list"></div>
+</div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyC3mIXsaFlLbpKm5qufpP6Trr9S1DXixKk",
+        authDomain: "fanews-b8b0f.firebaseapp.com",
+        databaseURL: "https://fanews-b8b0f-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "fanews-b8b0f",
+        storageBucket: "fanews-b8b0f.firebasestorage.app",
+        messagingSenderId: "514202109743",
+        appId: "1:514202109743:web:ef7f55adfaed815bbc43da"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // CONNECTED TO YOUR UID
+    const adminUid = "fRRx9SbBT5clwG0kjWAcd4uEd693"; 
+    
+    let accounts = [];
+    db.ref('users/' + adminUid).on('value', snapshot => {
+        accounts = []; const div = document.getElementById('list'); div.innerHTML = '';
+        let raw = []; snapshot.forEach(child => { const acc = child.val(); if (acc.status === 'CLIENT' || acc.status === 'CHECKED') raw.push({ id: child.key, ...acc }); });
+        raw.sort((a,b) => (a.status === 'CHECKED') - (b.status === 'CHECKED'));
+        raw.forEach(acc => {
+            accounts.push(acc); const isDone = acc.status === 'CHECKED';
+            div.innerHTML += `
+                <div class="acc-item ${isDone ? 'checked' : ''}">
+                    <b>${acc.name}</b><br><small style="color:#666">${acc.key}</small>
+                    <div class="otp-box"><div class="otp-num" id="otp-${acc.id}">------</div><span id="t-${acc.id}">30s</span></div>
+                    <button class="btn" style="background:${isDone ? '#444' : 'var(--success)'}; color:#000" onclick="updateStatus('${acc.id}', '${isDone ? 'CLIENT' : 'CHECKED'}')">${isDone ? '✓ CHECKED' : 'MARK AS CHECKED'}</button>
+                    <button class="btn" style="background:transparent; border:1px solid #333; color:#666; margin-top:10px" onclick="if(confirm('Return to Admin?')) updateStatus('${acc.id}', 'STOK')">RETURN TO ADMIN</button>
+                </div>`;
+        });
+    });
+    function updateStatus(id, s) { db.ref(`users/${adminUid}/${id}`).update({ status: s }); }
+    setInterval(() => {
+        const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
+        accounts.forEach(acc => {
+            try {
+                let totp = new OTPAuth.TOTP({ secret: acc.key });
+                const el = document.getElementById('otp-' + acc.id); if(el) el.innerText = totp.generate();
+                document.getElementById('t-' + acc.id).innerText = remain + "s";
+            } catch (e) {}
+        });
+    }, 1000);
+</script>
+</body>
+</html>
