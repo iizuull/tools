@@ -10,55 +10,41 @@
     <style>
         :root { --primary: #06b6d4; --bg: #000; --card: #121212; --border: #333; --text: #fff; --success: #22c55e; --gray: #888; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; display: flex; justify-content: center; }
-        .wrapper { width: 100%; max-width: 480px; padding-bottom: 120px; }
-        
+        .wrapper { width: 100%; max-width: 480px; padding-bottom: 130px; }
         .header { text-align: center; margin-bottom: 15px; }
         .search-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: #111; color: white; box-sizing: border-box; margin-bottom: 15px; outline: none; }
-        .search-input:focus { border-color: var(--primary); }
-
-        /* SELECTION BAR (Floating Bottom) */
-        .selection-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 440px; background: #1a1a1a; padding: 15px; border-radius: 15px; border: 2px solid var(--primary); display: none; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 1000; }
-        .sel-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .selection-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 440px; background: #1a1a1a; padding: 15px; border-radius: 15px; border: 2px solid var(--primary); display: none; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px #000; z-index: 1000; }
         .grid-bulk { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn-bulk { padding: 12px; border: none; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-
-        /* ITEM CARDS */
-        .acc-item { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; transition: 0.2s; }
+        .acc-item { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 12px; }
+        .acc-item.checked { opacity: 0.4; }
         .acc-item.selected { border-color: var(--primary); background: rgba(6, 182, 212, 0.05); }
-        .acc-item.is-done { opacity: 0.4; }
         .acc-check { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin-top: 5px; }
-        
         .otp-box { background: rgba(6, 182, 212, 0.1); padding: 12px; border-radius: 10px; margin: 10px 0; text-align: center; border: 1px solid #222; }
         .otp-num { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: 3px; font-family: monospace; }
-        
-        .btn-action { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-copy-small { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; font-size: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-
 <div class="wrapper">
     <div class="header">
         <h2 id="title" style="margin:0; color:var(--primary)">MY ACCOUNTS</h2>
         <p style="font-size:10px; color:var(--gray)">Order History & Live 2FA Codes</p>
     </div>
-
     <input type="text" id="searchInput" class="search-input" placeholder="Search by email..." oninput="render()">
-
     <div id="list"></div>
 </div>
 
 <div class="selection-bar" id="selectionBar">
-    <div class="sel-header">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
-            <input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> SELECT ALL
-        </label>
+    <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; border-bottom:1px solid #333; padding-bottom:10px;">
+        <label><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> SELECT ALL</label>
         <span id="selCount">0 selected</span>
     </div>
     <div class="grid-bulk">
         <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdate('CHECKED')">MARK CHECKED</button>
         <button class="btn-bulk" style="background:white; color:black" onclick="bulkCopy()">COPY DATA</button>
         <button class="btn-bulk" style="background:#333; color:white" onclick="bulkUpdate('CLIENT')">UNMARK</button>
-        <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkReturn()">RETURN TO ADMIN</button>
+        <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkReturn()">RETURN ADMIN</button>
     </div>
 </div>
 
@@ -72,35 +58,23 @@
         messagingSenderId: "514202109743",
         appId: "1:514202109743:web:ef7f55adfaed815bbc43da"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // Connect to your UID
     const adminUid = "fRRx9SbBT5clwG0kjWAcd4uEd693"; 
-
-    // Get Client ID from URL (?id=name)
-    const urlParams = new URLSearchParams(window.location.search);
-    const clientID = urlParams.get('id') ? urlParams.get('id').toLowerCase() : null;
+    const clientID = new URLSearchParams(window.location.search).get('id')?.toLowerCase();
 
     if(!clientID) {
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px;color:red'>ACCESS DENIED<br><small style='color:white;font-size:12px'>Please use your unique link</small></h2>";
+        document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px;'>NO ID PROVIDED</h2>";
     } else {
         document.getElementById('title').innerText = clientID.toUpperCase() + " ACCOUNTS";
         loadData();
     }
 
     let accounts = [];
-
     function loadData() {
         db.ref('users/' + adminUid).on('value', snapshot => {
             accounts = [];
-            snapshot.forEach(child => {
-                const acc = child.val();
-                if (acc.owner === clientID) {
-                    accounts.push({ id: child.key, ...acc });
-                }
-            });
+            snapshot.forEach(child => { if(child.val().owner === clientID) accounts.push({ id: child.key, ...child.val() }); });
             render();
         });
     }
@@ -109,23 +83,17 @@
         const div = document.getElementById('list');
         const search = document.getElementById('searchInput').value.toLowerCase();
         let filtered = [...accounts].reverse();
-        
         if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
-        
         div.innerHTML = '';
         filtered.forEach(acc => {
             const isDone = acc.status === 'CHECKED';
             div.innerHTML += `
-                <div class="acc-item ${isDone ? 'is-done' : ''}" id="item-${acc.id}">
+                <div class="acc-item ${isDone ? 'checked' : ''}" id="item-${acc.id}">
                     <input type="checkbox" class="acc-check" data-id="${acc.id}" onclick="updateUI()">
                     <div style="flex-grow:1">
-                        <b style="font-size:14px">${acc.name}</b><br>
-                        <small style="color:var(--gray); font-family:monospace; font-size:10px">${acc.key}</small>
-                        <div class="otp-box">
-                            <div class="otp-num" id="otp-${acc.id}">------</div>
-                            <small id="t-${acc.id}" style="color:var(--gray)">30s remaining</small>
-                        </div>
-                        <button class="btn-action" onclick="copySingle('${acc.name}|${acc.key}')">COPY EMAIL & KEY</button>
+                        <b>${acc.name}</b><br><small style="color:var(--gray); font-family:monospace; font-size:10px">${acc.key}</small>
+                        <div class="otp-box"><div class="otp-num" id="otp-${acc.id}">------</div><small id="t-${acc.id}">30s</small></div>
+                        <button class="btn-copy-small" onclick="copySingle('${acc.name}|${acc.key}')">COPY DATA</button>
                     </div>
                 </div>`;
         });
@@ -134,43 +102,21 @@
 
     function updateUI() {
         const checked = document.querySelectorAll('.acc-check:checked');
-        const bar = document.getElementById('selectionBar');
+        document.getElementById('selectionBar').style.display = checked.length > 0 ? 'flex' : 'none';
         document.getElementById('selCount').innerText = checked.length + " SELECTED";
-        bar.style.display = checked.length > 0 ? 'flex' : 'none';
-        
         document.querySelectorAll('.acc-item').forEach(el => el.classList.remove('selected'));
         checked.forEach(c => document.getElementById('item-' + c.dataset.id).classList.add('selected'));
     }
 
-    function toggleSelectAll() {
-        const master = document.getElementById('selectAll').checked;
-        document.querySelectorAll('.acc-check').forEach(c => c.checked = master);
-        updateUI();
-    }
-
-    function bulkUpdate(newStatus) {
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            db.ref(`users/${adminUid}/${c.dataset.id}`).update({ status: newStatus });
-        });
-    }
-
-    function bulkReturn() {
-        if(!confirm("Return selected accounts to Admin?")) return;
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            db.ref(`users/${adminUid}/${c.dataset.id}`).update({ status: 'STOK' });
-        });
-    }
-
+    function toggleSelectAll() { document.querySelectorAll('.acc-check').forEach(c => c.checked = document.getElementById('selectAll').checked); updateUI(); }
+    function bulkUpdate(s) { document.querySelectorAll('.acc-check:checked').forEach(c => db.ref(`users/${adminUid}/${c.dataset.id}`).update({ status: s })); }
+    function bulkReturn() { if(confirm("Return to Admin?")) document.querySelectorAll('.acc-check:checked').forEach(c => db.ref(`users/${adminUid}/${c.dataset.id}`).update({ status: 'STOK' })); }
     function bulkCopy() {
-        let text = "";
-        document.querySelectorAll('.acc-check:checked').forEach(c => {
-            const acc = accounts.find(a => a.id === c.dataset.id);
-            text += `${acc.name}|${acc.key}\n`;
+        let text = ""; document.querySelectorAll('.acc-check:checked').forEach(c => {
+            const acc = accounts.find(a => a.id === c.dataset.id); text += `${acc.name}|${acc.key}\n`;
         });
-        navigator.clipboard.writeText(text);
-        alert("Copied " + document.querySelectorAll('.acc-check:checked').length + " accounts!");
+        navigator.clipboard.writeText(text); alert("Copied!");
     }
-
     function copySingle(txt) { navigator.clipboard.writeText(txt); alert("Copied!"); }
 
     setInterval(() => {
@@ -178,10 +124,8 @@
         accounts.forEach(acc => {
             try {
                 let totp = new OTPAuth.TOTP({ secret: acc.key });
-                const el = document.getElementById('otp-' + acc.id);
-                if(el) el.innerText = totp.generate();
-                const tEl = document.getElementById('t-' + acc.id);
-                if(tEl) tEl.innerText = remain + "s remaining";
+                const el = document.getElementById('otp-' + acc.id); if(el) el.innerText = totp.generate();
+                document.getElementById('t-' + acc.id).innerText = remain + "s";
             } catch (e) {}
         });
     }, 1000);
