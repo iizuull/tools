@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v26.2</title>
+    <title>2FA Pro Cloud v26.5</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -11,36 +11,41 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --purple: #a855f7; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; margin: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; display: flex; justify-content: center; }
         .wrapper { width: 100%; max-width: 480px; }
-        .header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-        .stat-box { background: #1a1a1a; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
-        .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
-        .stat-box b { font-size: 12px; }
-
-        .card-form { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
         
-        /* QR Scanner Container */
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 10px; display: none; border: 1px solid var(--primary) !important; }
-        .btn-qr { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* Stats Section */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 15px; }
+        .stat-box { background: #1a1a1a; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
+        .stat-box b { font-size: 13px; }
 
-        .btn-save { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
+        /* Form & QR */
+        .card-form { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 10px; display: none; border: 1px solid var(--primary) !important; }
+        .btn-qr { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
 
-        .filter-tabs { display: flex; gap: 6px; margin: 15px 0; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-        .tab { flex: 0 0 auto; min-width: 75px; padding: 10px 5px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
+        /* Filter Tabs */
+        .filter-tabs { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
+        .tab { flex: 0 0 auto; min-width: 75px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
         .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        .acc-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .otp-box { display: flex; align-items: center; justify-content: space-between; background: rgba(37,99,235,0.05); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); }
-        .otp-num { font-family: monospace; font-size: 26px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
-        .btn-action-small { background: #1a1a1a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
-        .status-badge { font-size: 8px; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-weight: 900; border: none; }
+        /* Account Cards */
+        .acc-item { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .email-display { font-weight: bold; font-size: 15px; display: block; color: #fff; }
+        .key-display { font-family: monospace; font-size: 10px; color: var(--gray); display: block; margin-top: 4px; letter-spacing: 1px; }
         
-        .status-uploaded { background: var(--success); color: #000; }
-        .status-pending { background: var(--orange); color: #000; }
-        .status-sold { background: var(--purple); color: #fff; }
+        /* OTP Box */
+        .otp-box { background: rgba(37, 99, 235, 0.05); border: 1px solid #222; border-radius: 10px; padding: 12px; margin: 12px 0; display: flex; align-items: center; justify-content: space-between; }
+        .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        
+        /* Action Buttons */
+        .btn-action-small { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .status-badge { font-size: 9px; padding: 4px 8px; border-radius: 5px; font-weight: 900; border: none; cursor: pointer; }
+        .status-STOK { background: var(--orange); color: #000; }
+        .status-G2G { background: var(--success); color: #000; }
+        .status-SOLD { background: var(--purple); color: #fff; }
 
         #main-app, #login-screen { display: none; }
     </style>
@@ -49,18 +54,18 @@
 <div class="wrapper">
     <div id="login-screen" style="text-align: center; margin-top: 100px;">
         <h2>2FA AUTH CLOUD</h2>
-        <button onclick="login()" style="padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; background: white; color: black;">SIGN IN WITH GOOGLE</button>
+        <button onclick="login()" style="padding: 15px; width: 100%; border-radius: 10px; background: white; font-weight: bold; cursor: pointer;">SIGN IN WITH GOOGLE</button>
     </div>
 
     <div id="main-app">
         <div class="header">
-            <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                 <h3 style="margin:0">Inventory Global</h3>
                 <button onclick="logout()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">LOGOUT</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-box"><small>Total</small><b id="countTotal">0</b></div>
-                <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countBelum">0</b></div>
+                <div class="stat-box"><small style="color:var(--orange)">Stok</small><b id="countStok">0</b></div>
                 <div class="stat-box"><small style="color:var(--success)">G2G</small><b id="countG2G">0</b></div>
                 <div class="stat-box"><small style="color:var(--purple)">Sold</small><b id="countSold">0</b></div>
             </div>
@@ -69,10 +74,9 @@
         <div class="card-form">
             <div id="reader"></div>
             <button id="qr-btn" class="btn-qr" onclick="toggleScanner()">📷 SCAN QR & AUTO SAVE</button>
-            
-            <input type="text" id="accName" placeholder="Email Akun" autocomplete="off">
-            <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.replace(/\s/g, '').toUpperCase()" autocomplete="off">
-            <button class="btn-save" onclick="saveAccount()">Save Account</button>
+            <input type="text" id="accName" placeholder="Email Akun">
+            <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.toUpperCase()">
+            <button class="btn-qr" style="background:#fff; color:#000" onclick="saveAccount()">SAVE ACCOUNT</button>
         </div>
 
         <div class="filter-tabs">
@@ -100,99 +104,59 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    let userUid = null, accounts = [], currentFilter = 'ALL';
-    let html5QrCode = null;
+    let userUid = null, accounts = [], currentFilter = 'ALL', html5QrCode = null;
 
     auth.onAuthStateChanged(user => {
-        if (user) {
-            userUid = user.uid;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            loadData();
-        } else {
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('main-app').style.display = 'none';
-        }
+        if (user) { userUid = user.uid; document.getElementById('login-screen').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
+        else { document.getElementById('login-screen').style.display='block'; document.getElementById('main-app').style.display='none'; }
     });
 
     function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { if(confirm("Logout?")) auth.signOut(); }
 
-    // SCANNER LOGIC
     function toggleScanner() {
         const readerDiv = document.getElementById('reader');
         const qrBtn = document.getElementById('qr-btn');
         if (!html5QrCode) {
-            readerDiv.style.display = 'block';
-            qrBtn.innerText = "🛑 STOP SCANNING";
-            qrBtn.style.background = "var(--danger)";
+            readerDiv.style.display = 'block'; qrBtn.innerText = "🛑 STOP SCANNING";
             html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => parseQrCode(text), () => {}).catch(() => stopScanner());
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => parseQrCode(text), () => {});
         } else { stopScanner(); }
     }
 
     function stopScanner() {
         if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';
-                document.getElementById('qr-btn').innerText = "📷 SCAN QR & AUTO SAVE";
-                document.getElementById('qr-btn').style.background = "var(--primary)";
-                html5QrCode = null;
-            });
+            html5QrCode.stop().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('qr-btn').innerText = "📷 SCAN QR & AUTO SAVE"; html5QrCode = null; });
         }
     }
 
     function parseQrCode(url) {
         try {
-            const uri = new URL(url);
-            const secret = uri.searchParams.get("secret");
+            const uri = new URL(url); const secret = uri.searchParams.get("secret");
             let label = decodeURIComponent(uri.pathname.split('/').pop());
             let email = label.includes(':') ? label.split(':').pop().trim() : label.trim();
-
-            if (secret && email) {
-                document.getElementById('accName').value = email;
-                document.getElementById('accKey').value = secret.toUpperCase();
-                // OTOMATIS SIMPAN
-                saveAccount();
-            }
-        } catch (e) { console.log("Bukan QR 2FA"); }
+            if (secret && email) { document.getElementById('accName').value = email; document.getElementById('accKey').value = secret.toUpperCase(); saveAccount(); }
+        } catch (e) {}
     }
 
-    // FIREBASE LOGIC
     function loadData() {
         db.ref('users/' + userUid).on('value', snapshot => {
-            accounts = [];
-            snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
-            updateStats();
+            accounts = []; snapshot.forEach(child => { accounts.push({ id: child.key, ...child.val() }); });
+            document.getElementById('countTotal').innerText = accounts.length;
+            document.getElementById('countStok').innerText = accounts.filter(a => a.status === 'STOK').length;
+            document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'G2G').length;
+            document.getElementById('countSold').innerText = accounts.filter(a => a.status === 'SOLD').length;
             render();
         });
     }
 
-    function updateStats() {
-        document.getElementById('countTotal').innerText = accounts.length;
-        document.getElementById('countBelum').innerText = accounts.filter(a => a.status === 'STOK').length;
-        document.getElementById('countG2G').innerText = accounts.filter(a => a.status === 'G2G').length;
-        document.getElementById('countSold').innerText = accounts.filter(a => a.status === 'SOLD').length;
-    }
-
     function saveAccount() {
-        const nIn = document.getElementById('accName'), kIn = document.getElementById('accKey');
-        const name = nIn.value.trim().toLowerCase(), key = kIn.value.replace(/\s/g, '').toUpperCase();
-        
+        const name = document.getElementById('accName').value.trim().toLowerCase();
+        const key = document.getElementById('accKey').value.replace(/\s/g, '').toUpperCase();
         if (!name || !key) return;
-
-        // ANTI-DOUBLE CHECK
-        const isDuplicate = accounts.some(acc => acc.name.toLowerCase() === name);
-        if (isDuplicate) {
-            alert("Email sudah ada!");
-            nIn.value = ''; kIn.value = '';
-            return;
-        }
-
+        if (accounts.some(acc => acc.name.toLowerCase() === name)) { alert("Email sudah ada!"); return; }
         const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date }).then(() => {
-            nIn.value = ''; kIn.value = '';
-        });
+        db.ref('users/' + userUid).push({ name, key, status: 'STOK', date }).then(() => { document.getElementById('accName').value = ''; document.getElementById('accKey').value = ''; });
     }
 
     function render() {
@@ -201,36 +165,45 @@
         if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
         div.innerHTML = '';
         filtered.forEach(acc => {
-            let sClass = acc.status === 'G2G' ? 'status-uploaded' : (acc.status === 'SOLD' ? 'status-sold' : 'status-pending');
+            const spacesKey = acc.key.match(/.{1,4}/g).join(' ');
             div.innerHTML += `
                 <div class="acc-item">
-                    <div style="flex-grow:1">
-                        <span style="font-size:8px; color:var(--gray)">${acc.date || ''}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:8px; color:var(--gray)">${acc.date || ''}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:start">
+                        <div>
                             <span class="email-display">${acc.name}</span>
-                            <button class="status-badge ${sClass}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
+                            <span class="key-display">${spacesKey}</span>
                         </div>
-                        <div class="otp-box">
-                            <div style="display:flex; align-items:center; gap:8px">
-                                <span style="font-size:8px; color:var(--gray)" id="t-${acc.id}">30s</span>
-                                <div class="otp-num" id="otp-${acc.id}">------</div>
-                            </div>
-                            <button class="btn-action-small" onclick="copyOTP('${acc.id}')">COPY</button>
+                        <button class="status-badge status-${acc.status || 'STOK'}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
+                    </div>
+                    <div class="otp-box">
+                        <div style="display:flex; align-items:center; gap:8px">
+                            <span style="font-size:9px; color:var(--gray)" id="t-${acc.id}">30s</span>
+                            <div class="otp-num" id="otp-${acc.id}">------</div>
                         </div>
+                        <button class="btn-action-small" style="background:var(--primary)" onclick="copyText('${document.getElementById('otp-'+acc.id)?.innerText || ''}', this, 'COPY')">OTP</button>
+                    </div>
+                    <div style="display:flex; gap:8px">
+                        <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
+                        <button class="btn-action-small" onclick="copyText('${spacesKey}', this, 'KEY')">KEY</button>
+                        <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="margin-left:auto; background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">HAPUS</button>
                     </div>
                 </div>`;
         });
     }
 
-    function cycleStatus(id, current) {
-        let next = current === 'STOK' ? 'G2G' : (current === 'G2G' ? 'SOLD' : 'STOK');
+    function cycleStatus(id, cur) {
+        const next = cur === 'STOK' ? 'G2G' : (cur === 'G2G' ? 'SOLD' : 'STOK');
         db.ref(`users/${userUid}/${id}`).update({ status: next });
     }
 
-    function copyOTP(id) {
-        const code = document.getElementById('otp-' + id).innerText;
-        navigator.clipboard.writeText(code);
-        alert("Copied: " + code);
+    function copyText(txt, btn, label) {
+        if(txt.includes('-')) { // Jika OTP masih kosong
+            const id = btn.parentNode.parentNode.querySelector('.otp-num').id.split('-')[1];
+            txt = document.getElementById('otp-'+id).innerText;
+        }
+        navigator.clipboard.writeText(txt);
+        btn.innerText = "DONE"; setTimeout(() => btn.innerText = label, 800);
     }
 
     setInterval(() => {
@@ -246,12 +219,7 @@
         });
     }, 1000);
 
-    function setFilter(f, el) { 
-        currentFilter = f; 
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
-        el.classList.add('active'); 
-        render(); 
-    }
+    function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
 </script>
 </body>
 </html>
