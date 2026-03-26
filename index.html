@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Pro Cloud v26.5</title>
+    <title>2FA Pro Cloud v27.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database-compat.js"></script>
@@ -12,9 +12,9 @@
     <style>
         :root { --primary: #2563eb; --bg: #000; --card: #121212; --border: #333; --text: #fff; --gray: #888; --danger: #ef4444; --success: #22c55e; --orange: #f59e0b; --purple: #a855f7; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; display: flex; justify-content: center; }
-        .wrapper { width: 100%; max-width: 480px; }
+        .wrapper { width: 100%; max-width: 480px; padding-bottom: 100px; }
         
-        /* Stats Section */
+        /* Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 15px; }
         .stat-box { background: #1a1a1a; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
         .stat-box small { display: block; font-size: 8px; color: var(--gray); text-transform: uppercase; }
@@ -26,23 +26,18 @@
         #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 10px; display: none; border: 1px solid var(--primary) !important; }
         .btn-qr { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
 
-        /* Filter Tabs */
-        .filter-tabs { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
-        .tab { flex: 0 0 auto; min-width: 75px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--gray); cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
-        .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        /* Selection Bar (Sticky Bottom) */
+        .selection-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #1a1a1a; border-top: 2px solid var(--primary); padding: 15px; box-sizing: border-box; display: none; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); }
+        .grid-bulk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .btn-bulk { border: none; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 6px; padding: 12px 5px; }
 
         /* Account Cards */
-        .acc-item { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .email-display { font-weight: bold; font-size: 15px; display: block; color: #fff; }
-        .key-display { font-family: monospace; font-size: 10px; color: var(--gray); display: block; margin-top: 4px; letter-spacing: 1px; }
-        
-        /* OTP Box */
-        .otp-box { background: rgba(37, 99, 235, 0.05); border: 1px solid #222; border-radius: 10px; padding: 12px; margin: 12px 0; display: flex; align-items: center; justify-content: space-between; }
-        .otp-num { font-family: monospace; font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
-        
-        /* Action Buttons */
-        .btn-action-small { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-        .status-badge { font-size: 9px; padding: 4px 8px; border-radius: 5px; font-weight: 900; border: none; cursor: pointer; }
+        .acc-item { background: var(--card); padding: 12px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 10px; }
+        .acc-check { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin-top: 5px; }
+        .otp-box { background: rgba(37, 99, 235, 0.05); border: 1px solid #222; border-radius: 10px; padding: 10px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; }
+        .otp-num { font-family: monospace; font-size: 26px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        .btn-action-small { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .status-badge { font-size: 8px; padding: 4px 8px; border-radius: 5px; font-weight: 900; cursor: pointer; border: none; }
         .status-STOK { background: var(--orange); color: #000; }
         .status-G2G { background: var(--success); color: #000; }
         .status-SOLD { background: var(--purple); color: #fff; }
@@ -75,18 +70,23 @@
             <div id="reader"></div>
             <button id="qr-btn" class="btn-qr" onclick="toggleScanner()">📷 SCAN QR & AUTO SAVE</button>
             <input type="text" id="accName" placeholder="Email Akun">
-            <input type="text" id="accKey" placeholder="Secret Key" oninput="this.value = this.value.toUpperCase()">
+            <input type="text" id="accKey" placeholder="Secret Key">
             <button class="btn-qr" style="background:#fff; color:#000" onclick="saveAccount()">SAVE ACCOUNT</button>
         </div>
 
-        <div class="filter-tabs">
-            <div class="tab active" onclick="setFilter('ALL', this)">SEMUA</div>
-            <div class="tab" onclick="setFilter('STOK', this)">STOK</div>
-            <div class="tab" onclick="setFilter('G2G', this)">G2G</div>
-            <div class="tab" onclick="setFilter('SOLD', this)">SOLD</div>
-        </div>
-
         <div id="displayList"></div>
+    </div>
+
+    <div class="selection-bar" id="selectionBar">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+            <label style="font-size:12px; font-weight:bold"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> Select All</label>
+            <span id="selCount" style="font-size:11px; color:var(--primary)">0 selected</span>
+        </div>
+        <div class="grid-bulk">
+            <button class="btn-bulk" style="background:var(--primary); color:white" onclick="bulkCopy()">COPY ALL (Format)</button>
+            <button class="btn-bulk" style="background:var(--success); color:black" onclick="bulkUpdate('SOLD')">MARK SOLD</button>
+            <button class="btn-bulk" style="background:var(--danger); color:white" onclick="bulkDelete()">DELETE</button>
+        </div>
     </div>
 </div>
 
@@ -104,7 +104,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    let userUid = null, accounts = [], currentFilter = 'ALL', html5QrCode = null;
+    let userUid = null, accounts = [], html5QrCode = null;
 
     auth.onAuthStateChanged(user => {
         if (user) { userUid = user.uid; document.getElementById('login-screen').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
@@ -155,41 +155,85 @@
         const key = document.getElementById('accKey').value.replace(/\s/g, '').toUpperCase();
         if (!name || !key) return;
         if (accounts.some(acc => acc.name.toLowerCase() === name)) { alert("Email sudah ada!"); return; }
-        const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const date = new Date().toLocaleString('id-ID', { day:'2-digit', month:'short' });
         db.ref('users/' + userUid).push({ name, key, status: 'STOK', date }).then(() => { document.getElementById('accName').value = ''; document.getElementById('accKey').value = ''; });
     }
 
     function render() {
         const div = document.getElementById('displayList');
-        let filtered = [...accounts].reverse();
-        if (currentFilter !== 'ALL') filtered = filtered.filter(a => a.status === currentFilter);
         div.innerHTML = '';
-        filtered.forEach(acc => {
-            const spacesKey = acc.key.match(/.{1,4}/g).join(' ');
+        [...accounts].reverse().forEach(acc => {
             div.innerHTML += `
-                <div class="acc-item">
-                    <span style="font-size:8px; color:var(--gray)">${acc.date || ''}</span>
-                    <div style="display:flex; justify-content:space-between; align-items:start">
-                        <div>
-                            <span class="email-display">${acc.name}</span>
-                            <span class="key-display">${spacesKey}</span>
+                <div class="acc-item" data-id="${acc.id}">
+                    <input type="checkbox" class="acc-check" onclick="updateSelCount()">
+                    <div style="flex-grow:1">
+                        <div style="display:flex; justify-content:space-between">
+                            <span style="font-weight:bold">${acc.name}</span>
+                            <button class="status-badge status-${acc.status || 'STOK'}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
                         </div>
-                        <button class="status-badge status-${acc.status || 'STOK'}" onclick="cycleStatus('${acc.id}', '${acc.status}')">${acc.status || 'STOK'}</button>
-                    </div>
-                    <div class="otp-box">
-                        <div style="display:flex; align-items:center; gap:8px">
-                            <span style="font-size:9px; color:var(--gray)" id="t-${acc.id}">30s</span>
+                        <span style="font-size:10px; color:var(--gray); font-family:monospace">${acc.key.match(/.{1,4}/g).join(' ')}</span>
+                        <div class="otp-box">
                             <div class="otp-num" id="otp-${acc.id}">------</div>
+                            <button class="btn-action-small" style="background:var(--primary)" onclick="copyText('${acc.id}')">OTP</button>
                         </div>
-                        <button class="btn-action-small" style="background:var(--primary)" onclick="copyText('${document.getElementById('otp-'+acc.id)?.innerText || ''}', this, 'COPY')">OTP</button>
-                    </div>
-                    <div style="display:flex; gap:8px">
-                        <button class="btn-action-small" onclick="copyText('${acc.name}', this, 'MAIL')">MAIL</button>
-                        <button class="btn-action-small" onclick="copyText('${spacesKey}', this, 'KEY')">KEY</button>
-                        <button onclick="if(confirm('Hapus?')) db.ref('users/${userUid}/${acc.id}').remove()" style="margin-left:auto; background:none; border:none; color:var(--danger); cursor:pointer; font-size:10px">HAPUS</button>
+                        <div style="display:flex; gap:8px">
+                            <button class="btn-action-small" onclick="copyValue('${acc.name}', this, 'MAIL')">MAIL</button>
+                            <button class="btn-action-small" onclick="copyValue('${acc.key}', this, 'KEY')">KEY</button>
+                        </div>
                     </div>
                 </div>`;
         });
+        updateSelCount();
+    }
+
+    function updateSelCount() {
+        const count = document.querySelectorAll('.acc-check:checked').length;
+        document.getElementById('selCount').innerText = count + " selected";
+        document.getElementById('selectionBar').style.display = count > 0 ? 'block' : 'none';
+    }
+
+    function toggleSelectAll() {
+        const checked = document.getElementById('selectAll').checked;
+        document.querySelectorAll('.acc-check').forEach(c => c.checked = checked);
+        updateSelCount();
+    }
+
+    function bulkCopy() {
+        let text = "";
+        document.querySelectorAll('.acc-check:checked').forEach(c => {
+            const id = c.closest('.acc-item').getAttribute('data-id');
+            const acc = accounts.find(a => a.id === id);
+            text += `${acc.name}\n${acc.key}\n\n`; // FORMAT: ATAS MAIL BAWAH KEY
+        });
+        navigator.clipboard.writeText(text.trim());
+        alert("Copied " + document.querySelectorAll('.acc-check:checked').length + " accounts!");
+    }
+
+    function bulkUpdate(s) {
+        document.querySelectorAll('.acc-check:checked').forEach(c => {
+            const id = c.closest('.acc-item').getAttribute('data-id');
+            db.ref(`users/${userUid}/${id}`).update({ status: s });
+        });
+    }
+
+    function bulkDelete() {
+        if(confirm("Hapus akun terpilih?")) {
+            document.querySelectorAll('.acc-check:checked').forEach(c => {
+                const id = c.closest('.acc-item').getAttribute('data-id');
+                db.ref(`users/${userUid}/${id}`).remove();
+            });
+        }
+    }
+
+    function copyText(id) {
+        const txt = document.getElementById('otp-' + id).innerText;
+        navigator.clipboard.writeText(txt);
+        alert("OTP Copied: " + txt);
+    }
+
+    function copyValue(txt, btn, label) {
+        navigator.clipboard.writeText(txt);
+        btn.innerText = "DONE"; setTimeout(() => btn.innerText = label, 800);
     }
 
     function cycleStatus(id, cur) {
@@ -197,29 +241,15 @@
         db.ref(`users/${userUid}/${id}`).update({ status: next });
     }
 
-    function copyText(txt, btn, label) {
-        if(txt.includes('-')) { // Jika OTP masih kosong
-            const id = btn.parentNode.parentNode.querySelector('.otp-num').id.split('-')[1];
-            txt = document.getElementById('otp-'+id).innerText;
-        }
-        navigator.clipboard.writeText(txt);
-        btn.innerText = "DONE"; setTimeout(() => btn.innerText = label, 800);
-    }
-
     setInterval(() => {
-        const remain = 30 - (Math.floor(Date.now() / 1000) % 30);
         accounts.forEach(acc => {
             try {
                 let totp = new OTPAuth.TOTP({ secret: acc.key });
                 const el = document.getElementById('otp-' + acc.id);
                 if(el) el.innerText = totp.generate();
-                const tEl = document.getElementById('t-' + acc.id);
-                if(tEl) tEl.innerText = remain + "s";
             } catch (e) {}
         });
     }, 1000);
-
-    function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); render(); }
 </script>
 </body>
 </html>
